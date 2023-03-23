@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+message Payload {
+    uint32 sequence = 1;
+    int32 code = 2;
+    bool status = 3;
+    int32 command = 4;
+    int32 a = 5;
+    int32 b = 6;
+    int32 c = 7;
+    int32 d = 8;
+    bytes data = 9;
+    map<string, int64> dataI = 10;
+    map<string, string> dataS = 11;
+}
+
+message DataLogLog {
+    uint32 id = 1;
+    uint32 options = 2;
+    uint64 time = 3;
+    uint32 code = 4;
+    string tag = 5;
+    bytes data = 6;
+    bytes sign = 7;
+    bytes hmac = 8;
+}
+
+
+message DataLogMainFile {
+    uint32 id = 1;
+    uint32 file_counter = 2;
+    string file_prefix = 3;
+}
+
+
+message SDCardSettings {
+    uint32 OPERATION_SETTINGS_SETTINGS = 1;
+    uint32 OPERATION_SETTINGS_NUMBERS_SETTINGS = 2;
+    uint32 OPERATION_SETTINGS_TIMINGS_SETTINGS = 3;
+    uint32 OPERATION_SETTINGS_SENSOR_DATA_SETTINGS = 4;
+    uint32 OPERATION_SETTINGS_LOGGING_SETTINGS = 5;
+}

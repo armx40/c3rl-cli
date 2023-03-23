@@ -7,6 +7,9 @@ import (
 	"log"
 	"os"
 
+	pb "main/protobuf"
+
+	"github.com/golang/protobuf/proto"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -18,7 +21,7 @@ func command_data_functions_dump_to_csv(csv_filename string, csv_delimiter rune,
 	if csv_file == nil {
 		csv_file, err = os.Create(csv_filename)
 		if err != nil {
-			log.Fatalf("failed creating file: %s", err)
+			log.Fatalf("failed creating f	ile: %s", err)
 			return err
 		}
 
@@ -117,6 +120,42 @@ func command_data_functions_prepare_sqlite_tx(table_name string) error {
 		return err
 	}
 	return nil
+}
+
+/* */
+
+/* crypto */
+
+func command_data_functions_decrypt_data(e_data *[]byte) (d_data *[]byte, err error) {
+	return
+}
+
+func command_data_functions_hmac_verify(hmac *[]byte, data *[]byte) (d_data *[]byte, err error) {
+	return
+}
+
+func command_data_functions_sign_verify(sign *[]byte, data *[]byte) (d_data *[]byte, err error) {
+	return
+}
+
+/* */
+
+/* main log file */
+
+func command_data_functions_read_log_main_file(filename string) (main_data pb.DataLogMainFile, err error) {
+
+	data, err := os.ReadFile(filename)
+
+	if err != nil {
+		return
+	}
+
+	err = proto.Unmarshal(data, &main_data)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 /* */

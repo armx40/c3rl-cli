@@ -1,0 +1,22 @@
+Payload.dataI         max_count:10
+Payload.DataIEntry.key max_size:5
+Payload.dataS         max_count:10
+Payload.DataSEntry.key max_size:5
+Payload.DataSEntry.value max_size:100
+Payload.data         max_size:100
+
+
+DataLogLog.tag       max_size:100
+DataLogLog.data         max_size:512
+DataLogLog.sign max_size:64
+DataLogLog.hmac max_size:32
+
+
+DataLogMainFile.file_prefix max_size:128
+
+
+/* sd card */
+
+
+
+/**/

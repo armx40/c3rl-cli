@@ -21,30 +21,16 @@ func command_devices_subcommands() (commands cli.Commands) {
 		Action:  command_devices_list,
 	}, {
 
-		Name:    "settings",
-		Aliases: []string{"s"},
-		Usage:   "manage device settings",
-		Action:  command_devices_settings,
+		Name:        "settings",
+		Aliases:     []string{"s"},
+		Usage:       "manage device settings",
+		Subcommands: command_devices_subcommands_settings_subcommands(),
 	}}
 
 	return commands
 }
 
 func command_devices_list(cCtx *cli.Context) error {
-	devices, err := command_devices_functions_find_sdcard_device()
-	if err != nil {
-		return err
-	}
-
-	for _, device := range devices {
-		devices = append(devices, device)
-		fmt.Printf("  %v\n", device)
-	}
-
-	return nil
-}
-
-func command_devices_settings(cCtx *cli.Context) error {
 	devices, err := command_devices_functions_find_sdcard_device()
 	if err != nil {
 		return err

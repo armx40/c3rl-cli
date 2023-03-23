@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/google/gousb"
 	"github.com/google/gousb/usbid"
@@ -93,5 +95,96 @@ func command_devices_functions_find_sdcard_device() (devices []*block.Partition,
 
 		}
 	}
+	return
+}
+
+func command_devices_functions_read_user_storage_device() (device *block.Partition, err error) {
+	devices, err := command_devices_functions_find_sdcard_device()
+	if err != nil {
+		return
+	}
+
+	if len(devices) == 0 {
+		fmt.Println("no storage present")
+		return
+	}
+	for i, device := range devices {
+		devices = append(devices, device)
+		fmt.Printf("[%d]:  %v\n", i, device)
+	}
+
+	fmt.Print("Select storage device: ")
+
+	var device_idx int
+	fmt.Scan(&device_idx)
+
+	if device_idx > len(devices)-1 {
+		return device, fmt.Errorf("invalid storage device")
+	}
+
+	device = devices[device_idx]
+
+	return
+}
+
+func command_devices_functions_get_all_log_files(device *block.Partition) (dirs []fs.DirEntry, err error) {
+	dirs_, err := os.ReadDir(device.MountPoint)
+
+	if err != nil {
+		return
+	}
+
+	for i := range dirs_ {
+
+		name := dirs_[i].Name()
+
+		if len(name) < 14 {
+			continue
+		}
+		if name[:9] != "data_log_" {
+			continue
+		}
+
+		if name[len(name)-5:] != ".data" {
+			continue
+		}
+
+		if name[9:13] == "main" {
+			continue
+		}
+
+		dirs = append(dirs, dirs_[i])
+
+	}
+	return
+}
+
+func command_devices_functions_get_all_log_files_sorted(device *block.Partition, start_index int, num int) (files []fs.FileInfo, err error) {
+
+	/* process num */
+
+	all_log_files, err := command_devices_functions_get_all_log_files(device)
+	if err != nil {
+		return
+	}
+
+	if num > len(all_log_files) {
+		num = len(all_log_files)
+	}
+
+	curr_index := start_index
+
+	for len(files) < num {
+
+		filename := filepath.Join(device.MountPoint, fmt.Sprintf("data_log_%d.data", curr_index))
+		curr_index = (curr_index - 1) % 400000
+		file_info, err := os.Stat(filename)
+		if err != nil {
+			continue
+		}
+		files = append(files, file_info)
+
+	}
+
 	return
 }
