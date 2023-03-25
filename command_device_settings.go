@@ -43,12 +43,14 @@ func command_devices_subcommands_settings_subcommands() (commands cli.Commands) 
 		Aliases: []string{"r"},
 		Usage:   "read device settings",
 		Action:  command_devices_subcommands_settings_subcommands_read,
-	}, {
-		Name:    "gen",
-		Aliases: []string{"g"},
-		Usage:   "generate device settings",
-		Action:  command_devices_subcommands_settings_subcommands_generate,
-	}}
+	},
+	// {
+	// 	Name:    "gen",
+	// 	Aliases: []string{"g"},
+	// 	Usage:   "generate device settings",
+	// 	Action:  command_devices_subcommands_settings_subcommands_generate,
+	// }
+	}
 
 	return commands
 }
@@ -58,31 +60,13 @@ func command_devices_subcommands_settings_subcommands_write(cCtx *cli.Context) e
 	filename := ""
 
 	if !command_devices_subcommands_settings_subcommands_output_to_stdout {
-		devices, err := command_devices_functions_find_sdcard_device()
+		user_device, err := command_devices_functions_read_user_storage_device()
 		if err != nil {
 			return err
 		}
 
-		if len(devices) == 0 {
-			fmt.Println("no storage present")
-			return nil
-		}
-		for i, device := range devices {
-			devices = append(devices, device)
-			fmt.Printf("[%d]:  %v\n", i, device)
-		}
-
-		fmt.Print("Select storage device: ")
-
-		var device_idx int
-		fmt.Scan(&device_idx)
-
-		if device_idx > len(devices)-1 {
-			return fmt.Errorf("invalid storage device")
-		}
-
 		/* get selected device and prepare filename */
-		filename = filepath.Join(devices[device_idx].MountPoint, "settings.data")
+		filename = filepath.Join(user_device.MountPoint, "settings.data")
 		/**/
 	}
 

@@ -105,8 +105,7 @@ func command_devices_functions_read_user_storage_device() (device *block.Partiti
 	}
 
 	if len(devices) == 0 {
-		fmt.Println("no storage present")
-		return
+		return device, fmt.Errorf("no storage present")
 	}
 	for i, device := range devices {
 		devices = append(devices, device)
