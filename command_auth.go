@@ -3,8 +3,12 @@ package main
 import (
 	"fmt"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/urfave/cli/v2"
 )
+
+var command_auth_login_username string
+var command_auth_login_password string
 
 func command_auth_subcommands() (commands cli.Commands) {
 
@@ -21,13 +25,34 @@ func command_auth_subcommands() (commands cli.Commands) {
 }
 
 func command_auth_login(cCtx *cli.Context) error {
-	fmt.Print("Username: ")
+	var qs = []*survey.Question{
+		{
+			Name: "Username",
+			Prompt: &survey.Input{
+				Message: "Username:",
+				Default: "",
+			},
+		},
+		{
+			Name: "Password",
+			Prompt: &survey.Password{
+				Message: "Password:",
+			},
+		},
+	}
 
-	var username string
+	var data AuthLoginSurveyAnswerPayload
 
-	// Taking input from user
-	fmt.Scanln(&username)
+	err := survey.Ask(qs, &data)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 
-	/*  */
+	err = command_auth_functions_login(data.Username, data.Password)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

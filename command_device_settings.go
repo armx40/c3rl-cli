@@ -2,9 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/urfave/cli/v2"
+
+	pb "main/protobuf"
 )
 
 var command_devices_subcommands_settings_subcommands_device_type string
@@ -95,17 +99,41 @@ func command_devices_subcommands_settings_subcommands_write(cCtx *cli.Context) e
 
 }
 
-func command_devices_subcommands_settings_subcommands_read(cCtx *cli.Context) error {
-	devices, err := command_devices_functions_find_sdcard_device()
+func command_devices_subcommands_settings_subcommands_read(cCtx *cli.Context) (err error) {
+
+	/* ask for storage device */
+	user_device, err := command_devices_functions_read_user_storage_device()
 	if err != nil {
-		return err
+		return
 	}
+	/* */
 
-	for _, device := range devices {
-		devices = append(devices, device)
-		fmt.Printf("  %v\n", device)
+	/* read settings files */
+	settings_data_bytes, err := os.ReadFile(filepath.Join(user_device.MountPoint, "settings.data"))
+	if err != nil {
+		return
 	}
+	/* */
 
+	/* decoode settings data */
+	var settings_data pb.SDCardSettings
+	err = proto.Unmarshal(settings_data_bytes, &settings_data)
+	if err != nil {
+		return
+	}
+	/**/
+
+	/* decode settings data to survey answer data */
+	var data DeviceSettingsSurveyAnswerPayload
+	err = data.parse_sdcard_settings(&settings_data)
+	if err != nil {
+		return
+	}
+	/* */
+
+	/* pretty print data */
+	data.pretty_print()
+	/* */
 	return nil
 }
 

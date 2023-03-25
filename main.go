@@ -26,8 +26,8 @@ func main() {
 				Subcommands: command_data_subcommands(),
 			},
 		},
-		Name:  "cli",
-		Usage: "cli for c3rl applications",
+		Name:  "c3rl-cli",
+		Usage: "cli application for c3rl services",
 	}
 
 	if err := app.Run(os.Args); err != nil {

@@ -50,13 +50,14 @@ func command_devices_subcommands_settings_subcommands_write_atnode(cCtx *cli.Con
 	}
 	/**/
 
+	settings_ := settings.get_settings()
 	/* prepare sdcard settings data */
 	sdcard_settings := pb.SDCardSettings{
-		OPERATION_SETTINGS_SETTINGS:             settings.get_settings().OperationSettings,
-		OPERATION_SETTINGS_NUMBERS_SETTINGS:     settings.get_settings().OperationNumberSettings,
-		OPERATION_SETTINGS_TIMINGS_SETTINGS:     settings.get_settings().OperationTimingsSettings,
-		OPERATION_SETTINGS_SENSOR_DATA_SETTINGS: settings.get_settings().OperationSensorDataSettings,
-		OPERATION_SETTINGS_LOGGING_SETTINGS:     settings.get_settings().OperationLoggingSettings,
+		OPERATION_SETTINGS_SETTINGS:             settings_.OperationSettings,
+		OPERATION_SETTINGS_NUMBERS_SETTINGS:     settings_.OperationNumberSettings,
+		OPERATION_SETTINGS_TIMINGS_SETTINGS:     settings_.OperationTimingsSettings,
+		OPERATION_SETTINGS_SENSOR_DATA_SETTINGS: settings_.OperationSensorDataSettings,
+		OPERATION_SETTINGS_LOGGING_SETTINGS:     settings_.OperationLoggingSettings,
 	}
 
 	/**/
