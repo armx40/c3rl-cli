@@ -94,10 +94,19 @@ func command_data_subcommands_process_csv(cCtx *cli.Context) (err error) {
 	if err != nil {
 		return
 	}
-
 	/* */
 
+	/* close csv file */
+	defer func() {
+		if len(command_data_subcommands_process_csv_out_csv_file) > 0 {
+			// close the file
+			command_data_functions_close_csv()
+		}
+	}()
+	/**/
+
 	/* process each file */
+
 	/* */
 	// for i := range log_files {
 	read_errors := []string{}
@@ -135,13 +144,6 @@ func command_data_subcommands_process_csv(cCtx *cli.Context) (err error) {
 		}
 
 	}
-
-	/* close csv file */
-	if len(command_data_subcommands_process_csv_out_csv_file) > 0 {
-		// close the file
-		command_data_functions_close_csv()
-	}
-	/* */
 
 	/* print errors if any */
 
