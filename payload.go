@@ -8,6 +8,9 @@ import (
 	"github.com/fatih/color"
 )
 
+/* custom error types */
+
+/* */
 type LogLinePayload struct {
 	LineLength  uint32
 	LineOptions uint32

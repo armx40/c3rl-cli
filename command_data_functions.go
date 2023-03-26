@@ -16,6 +16,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+var command_data_functions_current_data_point = 0
+
 /* csv file */
 func command_data_functions_dump_to_csv(csv_filename string, csv_delimiter rune, data *LogLinePayload) error {
 
@@ -163,16 +165,15 @@ func command_data_functions_read_log_main_file(filename string) (main_data pb.Da
 
 /* */
 
-func command_data_process_data_from_file(log_filename string) error {
+func command_data_process_data_from_file(log_filename string) (data []LogLinePayload, err error) {
 
 	// cCtx.Command.Flags
 	/* filename */
 
 	/* open file */
-
 	log_file, err := os.Open(log_filename)
 	if err != nil {
-		return err
+		return
 	}
 
 	defer log_file.Close()
@@ -185,40 +186,22 @@ func command_data_process_data_from_file(log_filename string) error {
 
 	n, err := log_file.Read(buffer)
 	if err != nil {
-		return err
+		return
 	}
 
 	if n != len(command_data_log_file_header) {
-		return fmt.Errorf("failed read enough bytes")
+		return data, fmt.Errorf("failed read enough bytes")
 	}
 
 	/* check if header is valid */
 
 	if string(buffer) != command_data_log_file_header {
-		return fmt.Errorf("invalid file header")
+		return data, fmt.Errorf("invalid file header")
 	}
 
 	/* start processing data */
 
-	log_lines := []LogLinePayload{}
-
-	/* data points to check */
-	var data_points_to_check int
-	if len(command_data_subcommands_process_sqlite_database_file) > 0 {
-		data_points_to_check = command_data_subcommands_process_sqlite_database_count
-	} else {
-		data_points_to_check = command_data_subcommands_process_csv_count
-	}
-
-	current_data_point := 0
 	for {
-
-		if data_points_to_check > 0 {
-			current_data_point += 1
-			if current_data_point > data_points_to_check {
-				return fmt.Errorf("look no more")
-			}
-		}
 
 		line_len_buffer := make([]byte, 4)
 		n, err := log_file.Read(line_len_buffer)
@@ -226,10 +209,10 @@ func command_data_process_data_from_file(log_filename string) error {
 			if err == io.EOF {
 				break
 			}
-			return fmt.Errorf("failed to read line len")
+			return data, fmt.Errorf("failed to read line len")
 		}
 		if n != 4 {
-			return fmt.Errorf("failed read enough bytes")
+			return data, fmt.Errorf("failed read enough bytes")
 		}
 
 		/* calculate line line */
@@ -237,7 +220,7 @@ func command_data_process_data_from_file(log_filename string) error {
 		line_len := binary.LittleEndian.Uint32(line_len_buffer)
 
 		if line_len > 1024 {
-			return fmt.Errorf("invalid line len %d", line_len)
+			return data, fmt.Errorf("invalid line len %d", line_len)
 		}
 
 		if line_len == 0 {
@@ -248,12 +231,12 @@ func command_data_process_data_from_file(log_filename string) error {
 		line_buffer := make([]byte, line_len-4)
 		n, err = log_file.Read(line_buffer)
 		if err != nil {
-			return fmt.Errorf("failed to read line")
+			return data, fmt.Errorf("failed to read line")
 
 		}
 
 		if n != int(line_len)-4 {
-			return fmt.Errorf("failed read enough bytes")
+			return data, fmt.Errorf("failed read enough bytes")
 		}
 
 		/* process line options */
@@ -304,27 +287,55 @@ func command_data_process_data_from_file(log_filename string) error {
 			LineLength:  line_len,
 		}
 
-		log_lines = append(log_lines, curr_data)
-
-		/* write to local db?? */
-
-		if len(command_data_subcommands_process_sqlite_database_file) > 0 {
-			err = command_data_functions_dump_to_sqlite(command_data_subcommands_process_sqlite_database_file, command_data_subcommands_process_sqlite_database_tablename, &curr_data)
-			if err != nil {
-				return err
-			}
-		}
-
-		/* save to csv file? */
-
-		if len(command_data_subcommands_process_csv_out_csv_file) > 0 {
-			err = command_data_functions_dump_to_csv(command_data_subcommands_process_csv_out_csv_file, []rune(command_data_subcommands_process_csv_out_csv_file_delimiter)[0], &curr_data)
-			if err != nil {
-				return err
-			}
-		}
+		data = append(data, curr_data)
 
 	}
 
-	return err
+	return
+}
+
+func command_data_process_dump_data(curr_data *[]LogLinePayload) (dont_look_more bool, err error) {
+	/* write to local db?? */
+
+	/* data points to check */
+	var data_points_to_check int
+	if len(command_data_subcommands_process_sqlite_database_file) > 0 {
+		data_points_to_check = command_data_subcommands_process_sqlite_database_count
+	} else {
+		data_points_to_check = command_data_subcommands_process_csv_count
+	}
+
+	for idx := 0; idx < len(*curr_data); idx++ {
+
+		i := idx
+		if command_data_subcommands_process_direction_new {
+			i = len(*curr_data) - 1 - idx
+		}
+
+		// for i := range *curr_data {
+		if data_points_to_check > 0 {
+			command_data_functions_current_data_point += 1
+			if command_data_functions_current_data_point > data_points_to_check {
+				return true, nil
+			}
+		}
+		if len(command_data_subcommands_process_sqlite_database_file) > 0 {
+			err = command_data_functions_dump_to_sqlite(command_data_subcommands_process_sqlite_database_file, command_data_subcommands_process_sqlite_database_tablename, &(*curr_data)[i])
+			if err != nil {
+				return
+			}
+		}
+		/* */
+
+		/* save to csv file? */
+		if len(command_data_subcommands_process_csv_out_csv_file) > 0 {
+			err = command_data_functions_dump_to_csv(command_data_subcommands_process_csv_out_csv_file, []rune(command_data_subcommands_process_csv_out_csv_file_delimiter)[0], &(*curr_data)[i])
+			if err != nil {
+				return
+			}
+		}
+		/* */
+	}
+
+	return
 }

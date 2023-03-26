@@ -94,13 +94,25 @@ func command_data_subcommands_process_sqlite(cCtx *cli.Context) (err error) {
 
 	/* */
 	for i := range log_files {
-		err = command_data_process_data_from_file(filepath.Join(user_device.MountPoint, log_files[i].Name()))
+		data, err := command_data_process_data_from_file(filepath.Join(user_device.MountPoint, log_files[i].Name()))
 		if err != nil {
 			if err.Error() == "look no more" {
 				return nil
 			}
 			return err
 		}
+
+		/* dump data */
+
+		dont_look_more, err := command_data_process_dump_data(&data)
+		if err != nil {
+			return err
+		}
+
+		if dont_look_more {
+			break
+		}
+
 	}
 
 	return nil

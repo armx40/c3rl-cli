@@ -182,7 +182,6 @@ func command_devices_functions_get_all_log_files_sorted(device *block.Partition,
 			continue
 		}
 		files = append(files, file_info)
-
 	}
 
 	return

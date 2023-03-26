@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/urfave/cli/v2"
@@ -52,6 +53,11 @@ func command_data_subcommands_process_csv_command() (command *cli.Command) {
 				Usage:       "number of data points to extract",
 				Destination: &command_data_subcommands_process_csv_count,
 			},
+			&cli.BoolFlag{
+				Name:        "sample-new",
+				Usage:       "sample data starting from newest datapoint",
+				Destination: &command_data_subcommands_process_direction_new,
+			},
 		},
 	}
 	return command
@@ -92,17 +98,42 @@ func command_data_subcommands_process_csv(cCtx *cli.Context) (err error) {
 	/* */
 
 	/* process each file */
-
 	/* */
-	for i := range log_files {
-		err = command_data_process_data_from_file(filepath.Join(user_device.MountPoint, log_files[i].Name()))
-		if err != nil {
+	// for i := range log_files {
+	read_errors := []string{}
+	data_process_errors := []string{}
+	data_process_success := []string{}
+	number_of_files_read := 0
+	for idx := 0; idx < len(log_files); idx++ {
+		i := idx
+		number_of_files_read += 1
 
-			if err.Error() == "look no more" {
-				return nil
-			}
-			return err
+		if !command_data_subcommands_process_direction_new {
+			/* because log files are alrady sorted by new */
+			i = len(log_files) - 1 - idx
 		}
+
+		data, err := command_data_process_data_from_file(filepath.Join(user_device.MountPoint, log_files[i].Name()))
+
+		if err != nil {
+			read_errors = append(read_errors, fmt.Sprintf("File: %s READ FAILED!", log_files[i].Name()))
+			continue
+		}
+
+		/* dump data */
+
+		dont_look_more, err := command_data_process_dump_data(&data)
+		if err != nil {
+			data_process_errors = append(data_process_errors, fmt.Sprintf("File: %s DATA PROCESSING FAILED!", log_files[i].Name()))
+			continue
+		}
+
+		data_process_success = append(data_process_success, fmt.Sprintf("File: %s data processing success!", log_files[i].Name()))
+
+		if dont_look_more {
+			break
+		}
+
 	}
 
 	/* close csv file */
@@ -110,8 +141,26 @@ func command_data_subcommands_process_csv(cCtx *cli.Context) (err error) {
 		// close the file
 		command_data_functions_close_csv()
 	}
-
 	/* */
 
+	/* print errors if any */
+
+	if len(read_errors) > 0 {
+		for i := range read_errors {
+			fmt.Println(read_errors[i])
+		}
+	}
+
+	if len(data_process_errors) > 0 {
+		for i := range data_process_errors {
+			fmt.Println(data_process_errors[i])
+		}
+	}
+
+	if len(read_errors) > 0 || len(data_process_errors) > 0 {
+		fmt.Printf("successfully processed data from %d files out of %d\n", len(data_process_success), number_of_files_read)
+	}
+
+	/**/
 	return nil
 }
