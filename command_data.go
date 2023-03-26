@@ -9,7 +9,6 @@ const command_data_log_file_header = "c3rl - data log - format 1\n"
 func command_data_subcommands() (commands cli.Commands) {
 
 	commands = cli.Commands{{
-
 		Name:        "process",
 		Aliases:     []string{"p"},
 		Usage:       "process data from file",

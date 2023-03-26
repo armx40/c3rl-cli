@@ -8,6 +8,7 @@ import (
 
 var command_data_subcommands_process_sqlite_database_file string
 var command_data_subcommands_process_sqlite_database_tablename string
+var command_data_subcommands_process_sqlite_database_count int
 
 func command_data_subcommands_process_sqlite_command() (command *cli.Command) {
 	command = &cli.Command{
@@ -34,6 +35,12 @@ func command_data_subcommands_process_sqlite_command() (command *cli.Command) {
 				Value:       "data",
 				Usage:       "table name for sqlite database file",
 				Destination: &command_data_subcommands_process_sqlite_database_tablename,
+			},
+			&cli.IntFlag{
+				Name:        "count",
+				Value:       -1,
+				Usage:       "number of data points to extract",
+				Destination: &command_data_subcommands_process_sqlite_database_count,
 			},
 		},
 	}
@@ -74,21 +81,27 @@ func command_data_subcommands_process_sqlite(cCtx *cli.Context) (err error) {
 
 	/* */
 
+	/* close sqlite here */
+	defer func() {
+		if len(command_data_subcommands_process_sqlite_database_file) > 0 {
+			// close the file
+			command_data_functions_close_sqlite()
+		}
+	}()
+	/**/
+
 	/* process each file */
 
 	/* */
 	for i := range log_files {
 		err = command_data_process_data_from_file(filepath.Join(user_device.MountPoint, log_files[i].Name()))
 		if err != nil {
+			if err.Error() == "look no more" {
+				return nil
+			}
 			return err
 		}
 	}
 
-	/* close sqlite here */
-	if len(command_data_subcommands_process_sqlite_database_file) > 0 {
-		// close the file
-		command_data_functions_close_sqlite()
-	}
-	/**/
 	return nil
 }

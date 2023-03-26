@@ -202,7 +202,24 @@ func command_data_process_data_from_file(log_filename string) error {
 
 	log_lines := []LogLinePayload{}
 
+	/* data points to check */
+	var data_points_to_check int
+	if len(command_data_subcommands_process_sqlite_database_file) > 0 {
+		data_points_to_check = command_data_subcommands_process_sqlite_database_count
+	} else {
+		data_points_to_check = command_data_subcommands_process_csv_count
+	}
+
+	current_data_point := 0
 	for {
+
+		if data_points_to_check > 0 {
+			current_data_point += 1
+			if current_data_point > data_points_to_check {
+				return fmt.Errorf("look no more")
+			}
+		}
+
 		line_len_buffer := make([]byte, 4)
 		n, err := log_file.Read(line_len_buffer)
 		if err != nil {
@@ -307,11 +324,6 @@ func command_data_process_data_from_file(log_filename string) error {
 			}
 		}
 
-	}
-
-	if len(command_data_subcommands_process_csv_out_csv_file) > 0 {
-		// close the file
-		command_data_functions_close_csv()
 	}
 
 	return err

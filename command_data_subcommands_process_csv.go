@@ -10,6 +10,7 @@ var command_data_subcommands_process_csv_out_csv_file string
 var command_data_subcommands_process_csv_out_csv_file_delimiter string
 var command_data_subcommands_process_csv_decrypt bool
 var command_data_subcommands_process_csv_tail int
+var command_data_subcommands_process_csv_count int
 
 func command_data_subcommands_process_csv_command() (command *cli.Command) {
 	command = &cli.Command{
@@ -44,6 +45,12 @@ func command_data_subcommands_process_csv_command() (command *cli.Command) {
 				Value:       ",",
 				Usage:       "delimiter for csv file",
 				Destination: &command_data_subcommands_process_csv_out_csv_file_delimiter,
+			},
+			&cli.IntFlag{
+				Name:        "count",
+				Value:       -1,
+				Usage:       "number of data points to extract",
+				Destination: &command_data_subcommands_process_csv_count,
 			},
 		},
 	}
@@ -90,10 +97,19 @@ func command_data_subcommands_process_csv(cCtx *cli.Context) (err error) {
 	for i := range log_files {
 		err = command_data_process_data_from_file(filepath.Join(user_device.MountPoint, log_files[i].Name()))
 		if err != nil {
+
+			if err.Error() == "look no more" {
+				return nil
+			}
 			return err
 		}
 	}
-	/* find how many file have to be read */
+
+	/* close csv file */
+	if len(command_data_subcommands_process_csv_out_csv_file) > 0 {
+		// close the file
+		command_data_functions_close_csv()
+	}
 
 	/* */
 
