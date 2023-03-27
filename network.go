@@ -3,50 +3,64 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
-func networkRequest(url string, data interface{}, responsePayload interface{}) error {
+func network_request(url string, params map[string]string, headers map[string]string, data interface{}) (body []byte, err error) {
 
-	var requestType bool
+	var request_method string
 
 	if data != nil {
-		requestType = false // POST
+		request_method = "POST" // POST
 	} else {
-		requestType = true // GET
+		request_method = "GET" // GET
 	}
 
-	var resp *http.Response
-	var err error
-	var postData []byte
-
-	if requestType {
-		resp, err = http.Get(url)
-	} else {
-		postData, err = json.Marshal(data)
-		if err != nil {
-			return err
-		}
-		resp, err = http.Post(url, "application/json", bytes.NewBuffer(postData))
+	client := &http.Client{
+		Timeout: time.Second * 10,
 	}
 
+	postData, err := json.Marshal(data)
 	if err != nil {
-		return err
+		return
 	}
+
+	req, err := http.NewRequest(request_method, url, bytes.NewReader(postData))
+	if err != nil {
+		err = fmt.Errorf("Got error %s", err.Error())
+		return
+	}
+
+	/* set headers */
+	for i := range headers {
+		req.Header.Set(i, headers[i])
+	}
+	/* */
+
+	/* prepare url */
+	q := req.URL.Query()
+	for i := range params {
+		q.Add(i, params[i])
+	}
+	req.URL.RawQuery = q.Encode()
+	/**/
+
+	response, err := client.Do(req)
+	if err != nil {
+		err = fmt.Errorf("Got error %s", err.Error())
+		return
+	}
+	defer response.Body.Close()
 
 	// Read the response body on the line below.
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err = ioutil.ReadAll(response.Body)
 	if err != nil {
-		return err
+		return
 	}
 
-	err = json.Unmarshal(body, responsePayload)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return
 
 }

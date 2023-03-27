@@ -18,6 +18,12 @@ func command_auth_subcommands() (commands cli.Commands) {
 		Aliases: []string{"l"},
 		Usage:   "log in to your account",
 		Action:  command_auth_login,
+	}, {
+
+		Name:    "verify",
+		Aliases: []string{"v"},
+		Usage:   "verify the auth status",
+		Action:  command_auth_verify,
 	},
 	}
 
@@ -53,6 +59,18 @@ func command_auth_login(cCtx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func command_auth_verify(cCtx *cli.Context) error {
+
+	err := command_auth_functions_echo()
+	if err != nil {
+		return fmt.Errorf("failed to verify auth status")
+	}
+
+	fmt.Printf("auth status verified\n")
 
 	return nil
 }

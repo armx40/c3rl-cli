@@ -6,11 +6,26 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 /* custom error types */
 
 /* */
+
+type generalPayloadV2 struct {
+	Payload interface{} `json:"payload" validate:"required"`
+	Status  string      `json:"status" validate:"required"`
+	Code    int         `json:"code" validate:"required"`
+}
+
+type userTokenPayload struct {
+	Token     string             `json:"t"`
+	Firstname string             `json:"f"`
+	Lastname  string             `json:"l"`
+	UserID    primitive.ObjectID `json:"ui"`
+}
+
 type LogLinePayload struct {
 	LineLength  uint32
 	LineOptions uint32
