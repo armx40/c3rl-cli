@@ -129,22 +129,6 @@ func command_data_functions_prepare_sqlite_tx(table_name string) error {
 
 /* */
 
-/* crypto */
-
-func command_data_functions_decrypt_data(e_data *[]byte) (d_data *[]byte, err error) {
-	return
-}
-
-func command_data_functions_hmac_verify(hmac *[]byte, data *[]byte) (d_data *[]byte, err error) {
-	return
-}
-
-func command_data_functions_sign_verify(sign *[]byte, data *[]byte) (d_data *[]byte, err error) {
-	return
-}
-
-/* */
-
 /* main log file */
 
 func command_data_functions_read_log_main_file(filename string) (main_data pb.DataLogMainFile, err error) {
@@ -248,7 +232,34 @@ func command_data_process_data_from_file(log_filename string) (data []LogLinePay
 		is_hmaced := (line_options & DATA_LOG_HMACED) == 1
 		/**/
 
+		/* process line time */
+		line_time := binary.LittleEndian.Uint32(line_buffer[4:8])
+
+		/* process line tag */
+		tag_start_index := 8
+
 		if is_encrypted {
+
+			if len(command_data_subcommands_process_csv_device_uid) == 0 {
+				return data, fmt.Errorf("for encrypted data device UID is required")
+			}
+
+			decrypt_key, err := command_devices_functions_request_device_symmetric_key(command_data_subcommands_process_csv_device_uid)
+			if err != nil {
+				return data, err
+
+			}
+
+			iv := line_buffer[8 : 8+16]
+
+			decrypted_line, err := crypto_aes_decrypt(line_buffer[8+16:], decrypt_key[:16], iv)
+
+			if err != nil {
+				return data, err
+
+			}
+
+			line_buffer = append(line_buffer[:8], decrypted_line...)
 
 		}
 
@@ -260,14 +271,8 @@ func command_data_process_data_from_file(log_filename string) (data []LogLinePay
 
 		}
 
-		/* process line time */
-		line_time := binary.LittleEndian.Uint32(line_buffer[4:8])
-
-		/* process line tag */
-
-		tag_index := 8 + bytes.IndexByte(line_buffer[8:], 0)
-
-		line_tag := string(line_buffer[8:tag_index])
+		tag_index := tag_start_index + bytes.IndexByte(line_buffer[tag_start_index:], 0)
+		line_tag := string(line_buffer[tag_start_index:tag_index])
 
 		/* process line code */
 		tag_index += 1

@@ -8,6 +8,7 @@ import (
 )
 
 var command_data_subcommands_process_csv_out_csv_file string
+var command_data_subcommands_process_csv_device_uid string
 var command_data_subcommands_process_csv_out_csv_file_delimiter string
 var command_data_subcommands_process_csv_decrypt bool
 var command_data_subcommands_process_csv_tail int
@@ -57,6 +58,13 @@ func command_data_subcommands_process_csv_command() (command *cli.Command) {
 				Name:        "sample-new",
 				Usage:       "sample data starting from newest datapoint",
 				Destination: &command_data_subcommands_process_direction_new,
+			},
+			&cli.StringFlag{
+				Name:        "uid",
+				Aliases:     []string{"u"},
+				Value:       "",
+				Usage:       "UID of the device",
+				Destination: &command_data_subcommands_process_csv_device_uid,
 			},
 		},
 	}
@@ -125,7 +133,8 @@ func command_data_subcommands_process_csv(cCtx *cli.Context) (err error) {
 		data, err := command_data_process_data_from_file(filepath.Join(user_device.MountPoint, log_files[i].Name()))
 
 		if err != nil {
-			read_errors = append(read_errors, fmt.Sprintf("File: %s READ FAILED!", log_files[i].Name()))
+			// read_errors = append(read_errors, fmt.Sprintf("File: %s READ FAILED!", log_files[i].Name()))
+			read_errors = append(read_errors, fmt.Sprintf("File: %s %s", log_files[i].Name(), err.Error()))
 			continue
 		}
 
@@ -160,7 +169,7 @@ func command_data_subcommands_process_csv(cCtx *cli.Context) (err error) {
 	}
 
 	if len(read_errors) > 0 || len(data_process_errors) > 0 {
-		fmt.Printf("successfully processed data from %d files out of %d\n", len(data_process_success), number_of_files_read)
+		fmt.Printf("processed data from %d files out of %d\n", len(data_process_success), number_of_files_read)
 	}
 
 	/**/

@@ -8,6 +8,13 @@ import (
 )
 
 func main() {
+
+	err := crypto_init()
+	if err != nil {
+		fmt.Println("failed initialize crypto")
+		return
+	}
+
 	app := &cli.App{
 		Commands: []*cli.Command{
 			{

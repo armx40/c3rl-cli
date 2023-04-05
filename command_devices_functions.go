@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"encoding/csv"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"log"
@@ -23,6 +25,8 @@ var csv_delimiter string
 var sqlite3_db *sql.DB
 var sqlite3_db_statement *sql.Stmt
 var sqlite3_db_tx *sql.Tx
+
+var command_devices_functions_device_symmetric_key []byte
 
 func command_devices_functions_find_c3rl_device() {
 	ctx := gousb.NewContext()
@@ -183,6 +187,106 @@ func command_devices_functions_get_all_log_files_sorted(device *block.Partition,
 		}
 		files = append(files, file_info)
 	}
+
+	return
+}
+
+func command_devices_functions_request_device_symmetric_key(device_uid string) (key []byte, err error) {
+	var response generalPayloadV2
+
+	if len(command_devices_functions_device_symmetric_key) > 0 {
+		key = command_devices_functions_device_symmetric_key
+		err = nil
+		return
+	}
+
+	/* get public key bytes */
+	public_key := crypto_ecc_get_session_key().PublicKey
+	public_key_x := public_key.X.Bytes()
+	public_key_y := public_key.Y.Bytes()
+	/**/
+
+	request_data := make(map[string]string)
+	request_data["x"] = hex.EncodeToString(public_key_x)
+	request_data["y"] = hex.EncodeToString(public_key_y)
+	request_data["uid"] = device_uid
+
+	/* get auth data */
+	auth_data, err := command_auth_functions_get_auth_data()
+	if err != nil {
+		return
+	}
+	/* */
+
+	params := make(map[string]string)
+	params["g"] = "ech"
+
+	headers := make(map[string]string)
+	headers["Authorization"] = auth_data.Token
+
+	resp, err := network_request("https://c3rl.com/api/esc3rl/us?g=dsk", params, headers, request_data)
+
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal(resp, &response)
+	if err != nil {
+		return
+	}
+
+	if response.Status != "success" {
+		err = fmt.Errorf("failed to get device symmetric key")
+		return
+	}
+
+	/* decode data */
+
+	marshaled_bytes, err := json.Marshal(response.Payload)
+	if err != nil {
+		return
+	}
+
+	type data_ struct {
+		ecdhPayload
+		Key string `json:"k"`
+	}
+
+	var ecdh_data data_
+
+	err = json.Unmarshal(marshaled_bytes, &ecdh_data)
+	if err != nil {
+		return
+	}
+
+	/**/
+	/* get x and y bytes */
+	x, y, err := ecdh_data.get_bytes()
+	if err != nil {
+		return
+	}
+	/**/
+	/* calculate secret */
+	secret, err := crypto_ecdh_perform_ecdh(x, y)
+	if err != nil {
+		return
+	}
+	/**/
+
+	/* get key bytes */
+	key_bytes, err := hex.DecodeString(ecdh_data.Key)
+	if err != nil {
+		return
+	}
+	/**/
+
+	/* decrypt key */
+	key, err = crypto_aes_decrypt(key_bytes[16:], secret[:16], key_bytes[:16])
+	if err != nil {
+		return
+	}
+
+	command_devices_functions_device_symmetric_key = key
 
 	return
 }

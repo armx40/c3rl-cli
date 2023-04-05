@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	pb "main/protobuf"
 	"strings"
@@ -239,4 +240,46 @@ func (d *DeviceSettingsSurveyAnswerPayload) pretty_print() {
 type AuthLoginSurveyAnswerPayload struct {
 	Username string
 	Password string
+}
+
+type ecdhPayload struct {
+	PublicKeyX string `json:"x"`
+	PublicKeyY string `json:"y"`
+}
+
+func (e *ecdhPayload) Sanitize() error {
+	e.PublicKeyX = strings.TrimSpace(e.PublicKeyX)
+	e.PublicKeyY = strings.TrimSpace(e.PublicKeyY)
+
+	return nil
+}
+
+func (e *ecdhPayload) Verify() error {
+
+	if len(e.PublicKeyX) > 500 {
+		return fmt.Errorf("invalid x length")
+	}
+
+	if len(e.PublicKeyY) > 500 {
+		return fmt.Errorf("invalid y length")
+	}
+
+	return nil
+}
+
+func (e *ecdhPayload) get_bytes() (x []byte, y []byte, err error) {
+
+	x, err = hex.DecodeString(e.PublicKeyX)
+
+	if err != nil {
+		return
+	}
+
+	y, err = hex.DecodeString(e.PublicKeyY)
+
+	if err != nil {
+		return
+	}
+
+	return
 }

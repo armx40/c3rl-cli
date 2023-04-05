@@ -25,6 +25,11 @@ func command_devices_subcommands() (commands cli.Commands) {
 		Aliases:     []string{"s"},
 		Usage:       "manage device settings",
 		Subcommands: command_devices_subcommands_settings_subcommands(),
+	}, {
+		Name:        "data",
+		Aliases:     []string{"d"},
+		Usage:       "get device data",
+		Subcommands: command_devices_subcommands_data_subcommands(),
 	}}
 
 	return commands
