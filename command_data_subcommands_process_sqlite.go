@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/jaypipes/ghw/pkg/block"
 	"github.com/urfave/cli/v2"
 )
 
 var command_data_subcommands_process_sqlite_database_file string
 var command_data_subcommands_process_sqlite_database_tablename string
 var command_data_subcommands_process_sqlite_database_count int
+var command_data_subcommands_process_sqlite_files_folder string
 
 func command_data_subcommands_process_sqlite_command() (command *cli.Command) {
 	command = &cli.Command{
@@ -48,6 +50,19 @@ func command_data_subcommands_process_sqlite_command() (command *cli.Command) {
 				Usage:       "sample data starting from newest datapoint",
 				Destination: &command_data_subcommands_process_direction_new,
 			},
+			&cli.StringFlag{
+				Name:        "uid",
+				Aliases:     []string{"u"},
+				Value:       "",
+				Usage:       "UID of the device",
+				Destination: &command_data_subcommands_process_device_uid,
+			},
+			&cli.StringFlag{
+				Name:        "folder",
+				Value:       "",
+				Usage:       "find from data files in this folder",
+				Destination: &command_data_subcommands_process_sqlite_files_folder,
+			},
 		},
 	}
 	return command
@@ -56,14 +71,21 @@ func command_data_subcommands_process_sqlite_command() (command *cli.Command) {
 func command_data_subcommands_process_sqlite(cCtx *cli.Context) (err error) {
 
 	/* ask for storage device */
-	user_device, err := command_devices_functions_read_user_storage_device()
-	if err != nil {
-		return
+
+	var user_device *block.Partition
+	if len(command_data_subcommands_process_sqlite_files_folder) == 0 {
+		user_device, err = command_devices_functions_read_user_storage_device()
+		if err != nil {
+			return
+		}
+
+		command_data_subcommands_process_sqlite_files_folder = user_device.MountPoint
+
 	}
 	/* */
 
 	/* get the main data log file settings */
-	log_settings, err := command_data_functions_read_log_main_file(filepath.Join(user_device.MountPoint, "data_log_main.data"))
+	log_settings, err := command_data_functions_read_log_main_file(filepath.Join(command_data_subcommands_process_sqlite_files_folder, "data_log_main.data"))
 	if err != nil {
 		return
 	}
@@ -80,7 +102,7 @@ func command_data_subcommands_process_sqlite(cCtx *cli.Context) (err error) {
 	/* */
 
 	/* find of many data logs files are present */
-	log_files, err := command_devices_functions_get_all_log_files_sorted(user_device, int(latest_file_index), number_of_files_to_read)
+	log_files, err := command_devices_functions_get_all_log_files_sorted(command_data_subcommands_process_sqlite_files_folder, int(latest_file_index), number_of_files_to_read)
 	if err != nil {
 		return
 	}
@@ -113,7 +135,7 @@ func command_data_subcommands_process_sqlite(cCtx *cli.Context) (err error) {
 			i = len(log_files) - 1 - idx
 		}
 
-		data, err := command_data_process_data_from_file(filepath.Join(user_device.MountPoint, log_files[i].Name()))
+		data, err := command_data_process_data_from_file(filepath.Join(command_data_subcommands_process_sqlite_files_folder, log_files[i].Name()))
 		if err != nil {
 			read_errors = append(read_errors, fmt.Sprintf("File: %s READ FAILED!", log_files[i].Name()))
 			continue

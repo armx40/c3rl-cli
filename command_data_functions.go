@@ -87,14 +87,16 @@ func command_data_functions_dump_to_sqlite(sqlite_filename string, sqlite_table 
 func command_data_functions_close_sqlite() error {
 
 	/* commit data */
-	err := sqlite3_db_tx.Commit()
-	if err != nil {
-		log.Fatal(err)
-		return err
+	if sqlite3_db_tx != nil {
+		err := sqlite3_db_tx.Commit()
+		if err != nil {
+			log.Fatal(err)
+			return err
+		}
+		sqlite3_db_statement.Close()
+		sqlite3_db.Close()
 	}
 
-	sqlite3_db_statement.Close()
-	sqlite3_db.Close()
 	return nil
 }
 
@@ -240,11 +242,11 @@ func command_data_process_data_from_file(log_filename string) (data []LogLinePay
 
 		if is_encrypted {
 
-			if len(command_data_subcommands_process_csv_device_uid) == 0 {
+			if len(command_data_subcommands_process_device_uid) == 0 {
 				return data, fmt.Errorf("for encrypted data device UID is required")
 			}
 
-			decrypt_key, err := command_devices_functions_request_device_symmetric_key(command_data_subcommands_process_csv_device_uid)
+			decrypt_key, err := command_devices_functions_request_device_symmetric_key(command_data_subcommands_process_device_uid)
 			if err != nil {
 				return data, err
 

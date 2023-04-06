@@ -130,8 +130,8 @@ func command_devices_functions_read_user_storage_device() (device *block.Partiti
 	return
 }
 
-func command_devices_functions_get_all_log_files(device *block.Partition) (dirs []fs.DirEntry, err error) {
-	dirs_, err := os.ReadDir(device.MountPoint)
+func command_devices_functions_get_all_log_files(folder string) (dirs []fs.DirEntry, err error) {
+	dirs_, err := os.ReadDir(folder)
 
 	if err != nil {
 		return
@@ -162,11 +162,11 @@ func command_devices_functions_get_all_log_files(device *block.Partition) (dirs 
 	return
 }
 
-func command_devices_functions_get_all_log_files_sorted(device *block.Partition, start_index int, num int) (files []fs.FileInfo, err error) {
+func command_devices_functions_get_all_log_files_sorted(folder string, start_index int, num int) (files []fs.FileInfo, err error) {
 
 	/* process num */
 
-	all_log_files, err := command_devices_functions_get_all_log_files(device)
+	all_log_files, err := command_devices_functions_get_all_log_files(folder)
 	if err != nil {
 		return
 	}
@@ -179,7 +179,7 @@ func command_devices_functions_get_all_log_files_sorted(device *block.Partition,
 
 	for len(files) < num {
 
-		filename := filepath.Join(device.MountPoint, fmt.Sprintf("data_log_%d.data", curr_index))
+		filename := filepath.Join(folder, fmt.Sprintf("data_log_%d.data", curr_index))
 		curr_index = (curr_index - 1) % 400000
 		file_info, err := os.Stat(filename)
 		if err != nil {
