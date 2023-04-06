@@ -32,6 +32,11 @@ func main() {
 				Aliases:     []string{"dt"},
 				Subcommands: command_data_subcommands(),
 			},
+			{
+				Name:    "version",
+				Aliases: []string{"v"},
+				Action:  command_version_action,
+			},
 		},
 		Name:  "c3rl-cli",
 		Usage: "cli application for c3rl services",
