@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/urfave/cli/v2"
 )
 
@@ -33,10 +31,5 @@ func command_devices_subcommands_data_subcommands() (commands cli.Commands) {
 
 func command_devices_subcommands_data_subcommands_get(cCtx *cli.Context) error {
 
-	key_bytes, err := command_devices_functions_request_device_symmetric_key(command_devices_subcommands_data_subcommands_device_uid)
-	if err != nil {
-		return err
-	}
-	log.Println(key_bytes)
-	return err
+	return nil
 }

@@ -57,14 +57,6 @@ func crypto_ecdh_perform_ecdh(remote_public_key_x []byte, remote_public_key_y []
 /* aes */
 
 func crypto_aes_cbc_encrypt(key, plaintext []byte, iv []byte) (ciphertext []byte, err error) {
-	if len(plaintext)%aes.BlockSize != 0 {
-		panic("plaintext is not a multiple of the block size")
-	}
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		panic(err)
-	}
 
 	/* padding */
 	bytes_to_add := aes.BlockSize - (len(plaintext) % 16)
@@ -73,6 +65,11 @@ func crypto_aes_cbc_encrypt(key, plaintext []byte, iv []byte) (ciphertext []byte
 		plaintext = append(plaintext, byte(bytes_to_add))
 	}
 	/* */
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic(err)
+	}
 
 	ciphertext = make([]byte, len(plaintext))
 
@@ -92,8 +89,8 @@ func crypto_aes_cbc_decrypt(key, ciphertext, iv []byte) (plaintext []byte, err e
 		return
 	}
 
-	if len(ciphertext) < aes.BlockSize {
-		fmt.Printf("ciphertext too short")
+	if len(ciphertext)%aes.BlockSize != 0 {
+		fmt.Printf("invalid ciphertext length")
 		return
 	}
 
