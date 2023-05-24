@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -44,7 +43,7 @@ func command_devices_subcommands_settings_subcommands_write_atnode(cCtx *cli.Con
 
 	filename := filepath.Join(mountpoint, "settings.data")
 
-	log.Printf("writing to file: %s\n", filename)
+	fmt.Printf("writing to file: %s\n", filename)
 
 	/* generate sdcardsetting payload */
 	settings, err := command_devices_subcommands_settings_subcommands_populate_settings("atnode")
@@ -147,7 +146,7 @@ func command_devices_subcommands_check_data_log_main_file(cCtx *cli.Context, mou
 
 	filename := filepath.Join(mountpoint, "data_log_main.data")
 
-	log.Printf("checking data log main file")
+	fmt.Println("checking data log main file")
 
 	_, err = os.Stat(filename)
 
@@ -159,14 +158,14 @@ func command_devices_subcommands_check_data_log_main_file(cCtx *cli.Context, mou
 				return err
 			}
 			f.Close()
-			log.Printf("data log main file created")
+			fmt.Println("data log main file created")
 			return err
 		}
 	} else if err != nil {
-		log.Println("ERROR: Failed to check data log main file")
+		fmt.Println("ERROR: Failed to check data log main file")
 		return
 	} else {
-		log.Println("data log main file already exist")
+		fmt.Println("data log main file already exist")
 	}
 
 	return
