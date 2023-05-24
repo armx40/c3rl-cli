@@ -159,7 +159,14 @@ func command_devices_subcommands_check_data_log_main_file(cCtx *cli.Context, mou
 				return err
 			}
 			f.Close()
+			log.Printf("data log main file created")
+			return err
 		}
+	} else if err != nil {
+		log.Println("ERROR: Failed to check data log main file")
+		return
+	} else {
+		log.Println("data log main file already exist")
 	}
 
 	return
