@@ -37,6 +37,11 @@ func main() {
 				Aliases: []string{"v"},
 				Action:  command_version_action,
 			},
+			{
+				Name:        "proxy",
+				Aliases:     []string{"p"},
+				Subcommands: command_proxy_subcommands(),
+			},
 		},
 		Name:  "c3rl-cli",
 		Usage: "cli application for c3rl services",

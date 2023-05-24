@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	pb "main/protobuf"
 
@@ -39,7 +40,9 @@ const (
 	SETTINGS_LOGGING_SETTINGS_ENABLED = 0
 )
 
-func command_devices_subcommands_settings_subcommands_write_atnode(cCtx *cli.Context, filename string, output_to_stdout bool) (err error) {
+func command_devices_subcommands_settings_subcommands_write_atnode(cCtx *cli.Context, mountpoint string, output_to_stdout bool) (err error) {
+
+	filename := filepath.Join(mountpoint, "settings.data")
 
 	log.Printf("writing to file: %s\n", filename)
 
@@ -86,8 +89,12 @@ func command_devices_subcommands_settings_subcommands_write_atnode(cCtx *cli.Con
 		return err
 	}
 	/**/
+
 	fmt.Printf("settings succesfully written to %s\n", filename)
-	return nil
+
+	err = command_devices_subcommands_check_data_log_main_file(cCtx, mountpoint, true)
+
+	return err
 }
 
 func command_devices_subcommands_settings_subcommands_populate_settings(device_type string) (settings DeviceSettingsSurveyAnswerPayload, err error) {
@@ -131,6 +138,28 @@ func command_devices_subcommands_settings_subcommands_populate_settings(device_t
 	if err != nil {
 		fmt.Println(err.Error())
 		return
+	}
+
+	return
+}
+
+func command_devices_subcommands_check_data_log_main_file(cCtx *cli.Context, mountpoint string, create_if_not_exist bool) (err error) {
+
+	filename := filepath.Join(mountpoint, "data_log_main.data")
+
+	log.Printf("checking data log main file")
+
+	_, err = os.Stat(filename)
+
+	if os.IsNotExist(err) {
+		/* create */
+		if create_if_not_exist {
+			f, err := os.Create(filename)
+			if err != nil {
+				return err
+			}
+			f.Close()
+		}
 	}
 
 	return

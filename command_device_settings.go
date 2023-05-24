@@ -57,7 +57,7 @@ func command_devices_subcommands_settings_subcommands() (commands cli.Commands) 
 
 func command_devices_subcommands_settings_subcommands_write(cCtx *cli.Context) error {
 
-	filename := ""
+	mountpoint := ""
 
 	if !command_devices_subcommands_settings_subcommands_output_to_stdout {
 		user_device, err := command_devices_functions_read_user_storage_device()
@@ -66,16 +66,16 @@ func command_devices_subcommands_settings_subcommands_write(cCtx *cli.Context) e
 		}
 
 		/* get selected device and prepare filename */
-		filename = filepath.Join(user_device.MountPoint, "settings.data")
+		mountpoint = user_device.MountPoint
 		/**/
 	}
 
 	/* start asking for options according to the device selected */
 	switch command_devices_subcommands_settings_subcommands_device_type {
 	case "atnode":
-		return command_devices_subcommands_settings_subcommands_write_atnode(cCtx, filename, command_devices_subcommands_settings_subcommands_output_to_stdout)
+		return command_devices_subcommands_settings_subcommands_write_atnode(cCtx, mountpoint, command_devices_subcommands_settings_subcommands_output_to_stdout)
 	case "at":
-		return command_devices_subcommands_settings_subcommands_write_atnode(cCtx, filename, command_devices_subcommands_settings_subcommands_output_to_stdout)
+		return command_devices_subcommands_settings_subcommands_write_atnode(cCtx, mountpoint, command_devices_subcommands_settings_subcommands_output_to_stdout)
 	default:
 		return fmt.Errorf("invalid device selected")
 	}
