@@ -14,22 +14,25 @@ var (
 func command_devices_subcommands() (commands cli.Commands) {
 
 	commands = cli.Commands{{
-
 		Name:    "list",
 		Aliases: []string{"l"},
 		Usage:   "list connected devices",
 		Action:  command_devices_list,
 	}, {
-
 		Name:        "settings",
 		Aliases:     []string{"s"},
-		Usage:       "manage device settings",
+		Usage:       "manage connected device settings",
 		Subcommands: command_devices_subcommands_settings_subcommands(),
 	}, {
 		Name:        "data",
 		Aliases:     []string{"d"},
-		Usage:       "get device data",
+		Usage:       "get connected device data",
 		Subcommands: command_devices_subcommands_data_subcommands(),
+	}, {
+		Name:        "host-device",
+		Aliases:     []string{"hd"},
+		Usage:       "manage/configure host device",
+		Subcommands: command_devices_subcommands_host_device_subcommands(),
 	}}
 
 	return commands

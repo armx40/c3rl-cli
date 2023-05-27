@@ -283,3 +283,20 @@ func (e *ecdhPayload) get_bytes() (x []byte, y []byte, err error) {
 
 	return
 }
+
+/************************************************************/
+
+type GenericYesNoSurveyPayload struct {
+	Ok bool
+}
+
+/************************************************************/
+
+/****************host-device*********************************/
+
+type HostDeviceAddSurveyPayload struct {
+	Name        string
+	Description string
+}
+
+/************************************************************/
