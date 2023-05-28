@@ -52,7 +52,7 @@ func helper_function_find_bin(binary string) (string, error) {
 
 	/* thanks to https://github.com/xxr3376/golspci */
 
-	locations := []string{"/sbin", "/usr/sbin", "/usr/local/sbin", "/usr/bin"}
+	locations := []string{"/sbin", "/usr/sbin", "/usr/local/sbin", "/usr/bin", "/bin"}
 
 	for _, path := range locations {
 		lookup := path + "/" + binary
