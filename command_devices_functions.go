@@ -193,13 +193,13 @@ func command_devices_functions_request_device_symmetric_key(device_uid string) (
 	}
 	/* */
 
-	params := make(map[string]string)
-	params["g"] = "ech"
+	// params := make(map[string]string)
+	// params["g"] = "lgn"
 
 	headers := make(map[string]string)
 	headers["Authorization"] = auth_data.Token
 
-	resp, err := network_request("https://c3rl.com/api/esc3rl/us?g=dsk", params, headers, request_data)
+	resp, err := network_request(API_HOST+"devices?g=dsk", nil, headers, request_data)
 
 	if err != nil {
 		return
@@ -262,6 +262,5 @@ func command_devices_functions_request_device_symmetric_key(device_uid string) (
 	}
 
 	command_devices_functions_device_symmetric_key = key
-
 	return
 }

@@ -13,10 +13,10 @@ func command_auth_functions_login(username string, password string) (err error) 
 	var response generalPayloadV2
 
 	request_data := make(map[string]string)
-	request_data["u"] = username
-	request_data["p"] = password
+	request_data["user"] = username
+	request_data["pass"] = password
 
-	resp, err := network_request("https://c3rl.com/api/esc3rl/authmethods?g=lgn", nil, nil, request_data)
+	resp, err := network_request(API_HOST+"auth?g=lgn", nil, nil, request_data)
 
 	if err != nil {
 		return err
@@ -104,5 +104,10 @@ func command_auth_functions_get_auth_data() (data userTokenPayload, err error) {
 	if err != nil {
 		return
 	}
+	return
+}
+
+func command_auth_functions_generate_host_device_certificate() (err error) {
+
 	return
 }

@@ -54,31 +54,31 @@ func command_devices_subcommands_host_device_subcommands() (commands cli.Command
 
 func command_devices_subcommands_host_device_subcommands_add(cCtx *cli.Context) error {
 
-	// var qs = []*survey.Question{
-	// 	{
-	// 		Name: "Name",
-	// 		Prompt: &survey.Input{
-	// 			Message: "Name:",
-	// 			Default: "",
-	// 		},
-	// 	},
-	// 	{
-	// 		Name: "Description",
-	// 		Prompt: &survey.Input{
-	// 			Message: "Description:",
-	// 		},
-	// 	},
-	// }
+	var qs = []*survey.Question{
+		{
+			Name: "Name",
+			Prompt: &survey.Input{
+				Message: "Name:",
+				Default: "",
+			},
+		},
+		{
+			Name: "Description",
+			Prompt: &survey.Input{
+				Message: "Description:",
+			},
+		},
+	}
 
-	// var data HostDeviceAddSurveyPayload
+	var data HostDeviceAddSurveyPayload
 
-	// err := survey.Ask(qs, &data)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return err
-	// }
+	err := survey.Ask(qs, &data)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 
-	err := command_devices_host_device_functions_add_device("data.Name", "data.Description")
+	err = command_devices_host_device_functions_add_device(data.Name, data.Description)
 	return err
 }
 
@@ -111,6 +111,6 @@ func command_devices_subcommands_host_device_subcommands_remove(cCtx *cli.Contex
 
 func command_devices_subcommands_host_device_subcommands_generate_credentials(cCtx *cli.Context) error {
 
-	err := command_devices_host_device_functions_generate_credentials(command_devices_subcommands_host_device_subcommands_generate_credentials_file, command_devices_subcommands_host_device_subcommands_generate_credentials_output_to_stdout)
+	err := command_devices_host_device_functions_generate_credentials(nil, command_devices_subcommands_host_device_subcommands_generate_credentials_file, command_devices_subcommands_host_device_subcommands_generate_credentials_output_to_stdout)
 	return err
 }

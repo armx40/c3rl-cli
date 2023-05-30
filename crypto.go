@@ -102,6 +102,12 @@ func crypto_aes_cbc_decrypt(key, ciphertext, iv []byte) (plaintext []byte, err e
 	/* padding size */
 	padding_size := ciphertext[len(ciphertext)-1]
 	/**/
+
+	if len(ciphertext)-int(padding_size) < 1 {
+		err = fmt.Errorf("failed to decrypt")
+		return
+	}
+
 	plaintext = ciphertext[:(len(ciphertext) - int(padding_size))]
 
 	return

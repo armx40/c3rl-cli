@@ -15,6 +15,10 @@ func network_request(url string, params map[string]string, headers map[string]st
 
 	if data != nil {
 		request_method = "POST" // POST
+		if headers == nil {
+			headers = make(map[string]string)
+		}
+		headers["content-type"] = "application/json"
 	} else {
 		request_method = "GET" // GET
 	}
@@ -53,12 +57,19 @@ func network_request(url string, params map[string]string, headers map[string]st
 		err = fmt.Errorf("Got error %s", err.Error())
 		return
 	}
+
 	defer response.Body.Close()
 
 	// Read the response body on the line below.
 	body, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		return
+	}
+
+	/* if theres any error respond it */
+
+	if response.StatusCode != http.StatusOK {
+		err = fmt.Errorf("http error: %d", response.StatusCode)
 	}
 
 	return

@@ -300,3 +300,9 @@ type HostDeviceAddSurveyPayload struct {
 }
 
 /************************************************************/
+
+type host_device_credentials_t struct {
+	UID      string             `json:"uid"`
+	DeviceID primitive.ObjectID `json:"did"`
+	UserID   primitive.ObjectID `json:"ui"`
+}
