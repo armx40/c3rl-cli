@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+// option go_package = "c3rl.com/pb/c3rl-proto-payloads";
+
+message WebSocketPacketPayload {
+  uint32 packet_type = 1;
+  bytes data = 2;
+  uint32 e_host = 3;
+  uint32 e_port = 4;
+  uint32 s_host = 5;
+  uint32 s_port = 6;
+  bytes connection_id = 7;
+  uint32 sequence_number = 8;
+}
+
+
+message WebSocketAuthPayload {
+  uint32 connection_type= 1;
+  bytes certificate_data=2;
+  bytes token = 3;
+  bytes uid=4;
+  bytes device_id=5;
+}
