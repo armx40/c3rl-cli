@@ -3,6 +3,7 @@ package c3rliotproxy
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	pb "main/c3rl-iot-reverse-proxy/protofiles"
@@ -48,6 +49,13 @@ func websocket_init() (err error) {
 			}
 
 		ROUTINE_END:
+
+			if main_app_direction == "startpoint" {
+				fmt.Printf("cannot establish start point connection\n")
+				err = fmt.Errorf("cannot establish start point connection")
+				os.Exit(1)
+				return
+			}
 			log.Println(err)
 			log.Println("Will restart routine in 5 seconds")
 			time.Sleep(WEBSOCKET_RECONNECT_WAIT_TIME * time.Second)
@@ -73,10 +81,19 @@ func websocket_init_auth() (err error) {
 		conn_type = WEBSOCKET_CONNECTION_TYPE_STARTPOINT
 	}
 
+	/* send endpoint uid in case of startpoint */
+	uid_to_send := main_app_credentials.UID
+	if main_app_direction == "startpoint" {
+		uid_to_send = main_app_endpoint_uid
+	}
+
 	auth_data := pb.WebSocketAuthPayload{
 		ConnectionType: uint32(conn_type),
-		Uid:            []byte(main_app_credentials.UID),
+		Uid:            []byte(uid_to_send),
 		Token:          []byte(main_app_auth_data.Token),
+		UserId:         []byte(main_app_credentials.UserID.Hex()),
+		DeviceId:       []byte(main_app_credentials.DeviceID.Hex()),
+		DeviceData:     main_app_machine_data,
 	}
 
 	auth_data_bytes, err := proto.Marshal(&auth_data)

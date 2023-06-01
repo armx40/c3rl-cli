@@ -50,7 +50,8 @@ func command_auth_functions_login(username string, password string) (err error) 
 	/* store auth payload */
 	err = keyring.Set("c3rl-cli", "auth", string(marshaled_bytes))
 	if err != nil {
-		log.Fatal(err)
+		err = fmt.Errorf("Failed to store auth token. Make sure you have access to system's keyring.")
+		return err
 	}
 	/**/
 
@@ -74,7 +75,7 @@ func command_auth_functions_echo() (err error) {
 	headers := make(map[string]string)
 	headers["Authorization"] = auth_data.Token
 
-	resp, err := network_request("https://c3rl.com/api/esc3rl/user?g=ech", params, headers, nil)
+	resp, err := network_request(API_HOST+"auth?g=ech", params, headers, nil)
 	if err != nil {
 		return err
 	}

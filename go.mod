@@ -6,7 +6,6 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/fatih/color v1.15.0
 	github.com/golang/protobuf v1.5.0
-	github.com/google/gousb v1.1.2
 	github.com/gorilla/websocket v1.5.0
 	github.com/jaypipes/ghw v0.10.0
 	github.com/mattn/go-sqlite3 v1.14.16
@@ -19,6 +18,7 @@ require (
 require (
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/alessio/shellescape v1.4.1 // indirect
+	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect

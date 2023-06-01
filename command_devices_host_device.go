@@ -111,6 +111,6 @@ func command_devices_subcommands_host_device_subcommands_remove(cCtx *cli.Contex
 
 func command_devices_subcommands_host_device_subcommands_generate_credentials(cCtx *cli.Context) error {
 
-	err := command_devices_host_device_functions_generate_credentials(nil, command_devices_subcommands_host_device_subcommands_generate_credentials_file, command_devices_subcommands_host_device_subcommands_generate_credentials_output_to_stdout)
+	err := command_devices_host_device_functions_generate_credentials(nil, command_devices_subcommands_host_device_subcommands_generate_credentials_output_to_stdout)
 	return err
 }

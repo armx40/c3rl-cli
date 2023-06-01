@@ -377,7 +377,7 @@ func (h *host_device_payloads_information_data_uname_t) get() (err error) {
 
 /************************************************************************/
 
-type host_device_payloads_information_data_t struct {
+type Host_device_payloads_information_data_t struct {
 	Uname    host_device_payloads_information_data_uname_t
 	USB      host_device_payloads_information_data_lsusb_t
 	PCI      host_device_payloads_information_data_lspci_t
@@ -387,7 +387,7 @@ type host_device_payloads_information_data_t struct {
 	CPU      host_device_payloads_information_data_lscpu_t
 }
 
-func (h *host_device_payloads_information_data_t) get() (err error) {
+func (h *Host_device_payloads_information_data_t) Get() (err error) {
 
 	/* uname */
 	err = h.Uname.get()

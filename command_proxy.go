@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	pb "main/c3rl-iot-reverse-proxy"
 
 	"github.com/urfave/cli/v2"
 )
 
 var command_proxy_startpoint_config_file string
+var command_proxy_startpoint_endpoint_uid string
 var command_proxy_credentials_file string
 
 func command_proxy_subcommands() (commands cli.Commands) {
@@ -23,7 +25,7 @@ func command_proxy_subcommands() (commands cli.Commands) {
 				Value:       "",
 				Usage:       "credentials file for authentication",
 				Destination: &command_proxy_credentials_file,
-				Required:    true,
+				Required:    false,
 			},
 		},
 	}, {
@@ -48,10 +50,41 @@ func command_proxy_subcommands() (commands cli.Commands) {
 				Value:       "",
 				Usage:       "credentials file for authentication",
 				Destination: &command_proxy_credentials_file,
+				Required:    false,
+			},
+
+			&cli.StringFlag{
+				Name:        "uid",
+				Aliases:     []string{"u"},
+				Value:       "",
+				Usage:       "endpoint uid",
+				Destination: &command_proxy_startpoint_endpoint_uid,
 				Required:    true,
 			},
 		},
 	},
+		{
+			Name:    "install",
+			Aliases: []string{"i"},
+			Usage:   "install endpoint service/job",
+			Action:  command_proxy_install_endpoint,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:        "credentials",
+					Aliases:     []string{"cr"},
+					Value:       "",
+					Usage:       "credentials file for authentication",
+					Destination: &command_proxy_credentials_file,
+					Required:    false,
+				},
+			},
+		},
+		{
+			Name:    "uninstall",
+			Aliases: []string{"u"},
+			Usage:   "uninstall endpoint service/job",
+			Action:  command_proxy_uninstall_endpoint,
+		},
 	}
 
 	return commands
@@ -73,11 +106,26 @@ func command_proxy_endpoint(cCtx *cli.Context) (err error) {
 	}
 	/**/
 
+	/* get machine data */
+
+	machine_data := Host_device_payloads_information_data_t{}
+
+	err = machine_data.Get()
+	if err != nil {
+		return
+	}
+
+	machine_data_bytes, err := json.Marshal(machine_data)
+	if err != nil {
+		return
+	}
+	/**/
+
 	auth_data_proxy := pb.Proxy_auth_data_t{
 		Token: auth_data.Token,
 	}
 
-	return pb.StartApp("endpoint", "", credentials, &auth_data_proxy)
+	return pb.StartApp("endpoint", "", "", credentials, &auth_data_proxy, machine_data_bytes)
 }
 
 func command_proxy_startpoint(cCtx *cli.Context) (err error) {
@@ -100,5 +148,30 @@ func command_proxy_startpoint(cCtx *cli.Context) (err error) {
 		Token: auth_data.Token,
 	}
 
-	return pb.StartApp("startpoint", command_proxy_startpoint_config_file, credentials, &auth_data_proxy)
+	/* get machine data */
+
+	machine_data := Host_device_payloads_information_data_t{}
+
+	err = machine_data.Get()
+	if err != nil {
+		return
+	}
+
+	machine_data_bytes, err := json.Marshal(machine_data)
+	if err != nil {
+		return
+	}
+	/**/
+
+	return pb.StartApp("startpoint", command_proxy_startpoint_config_file, command_proxy_startpoint_endpoint_uid, credentials, &auth_data_proxy, machine_data_bytes)
+}
+
+func command_proxy_install_endpoint(cCtx *cli.Context) (err error) {
+
+	return
+}
+
+func command_proxy_uninstall_endpoint(cCtx *cli.Context) (err error) {
+
+	return
 }

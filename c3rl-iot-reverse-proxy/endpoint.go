@@ -14,6 +14,8 @@ const ENDPOINT_CONNECTION_TIMEOUT_SECONDS = 5 * 60 // 5 minutes
 
 const ENDPOINT_CONNECTION_BUFFER_SIZE = 32 * 1024
 
+const ENDPOINT_DEADLINE_ENABLED = false
+
 type endpoint_connection_id_t string
 
 func (s endpoint_connection_id_t) bytes() []byte {
@@ -82,7 +84,9 @@ func (e *endpoint_connection_t) open() (err error) {
 	/**/
 
 	/* set timeout. why?? */
-	conn.SetDeadline(time.Now().Add(ENDPOINT_CONNECTION_TIMEOUT_SECONDS * time.Second))
+	if ENDPOINT_DEADLINE_ENABLED {
+		conn.SetDeadline(time.Now().Add(ENDPOINT_CONNECTION_TIMEOUT_SECONDS * time.Second))
+	}
 	/**/
 
 	endpoint.EndpointConnections[key].ConnectionID = key //??
@@ -110,7 +114,9 @@ func (e *endpoint_connection_t) read_routine() (err error) {
 			}
 
 			/* reset deadline */
-			e.Conn.SetDeadline(time.Now().Add(ENDPOINT_CONNECTION_TIMEOUT_SECONDS * time.Second))
+			if ENDPOINT_DEADLINE_ENABLED {
+				e.Conn.SetDeadline(time.Now().Add(ENDPOINT_CONNECTION_TIMEOUT_SECONDS * time.Second))
+			}
 			/**/
 
 			err = e.process_read(e.Buffer[:n])
@@ -142,7 +148,9 @@ func (e *endpoint_connection_t) process_packet(packet *pb.WebSocketPacketPayload
 		return
 	}
 	/* reset deadline */
-	e.Conn.SetDeadline(time.Now().Add(ENDPOINT_CONNECTION_TIMEOUT_SECONDS * time.Second))
+	if ENDPOINT_DEADLINE_ENABLED {
+		e.Conn.SetDeadline(time.Now().Add(ENDPOINT_CONNECTION_TIMEOUT_SECONDS * time.Second))
+	}
 	/**/
 	return
 }

@@ -20,4 +20,6 @@ message WebSocketAuthPayload {
   bytes token = 3;
   bytes uid=4;
   bytes device_id=5;
+  bytes user_id =6;
+  bytes device_data=7;
 }

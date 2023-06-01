@@ -7,12 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 
-	"github.com/google/gousb"
-	"github.com/google/gousb/usbid"
 	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/block"
 )
@@ -28,37 +25,37 @@ var sqlite3_db_tx *sql.Tx
 
 var command_devices_functions_device_symmetric_key []byte
 
-func command_devices_functions_find_c3rl_device() {
-	ctx := gousb.NewContext()
-	defer ctx.Close()
+// func command_devices_functions_find_c3rl_device() {
+// 	ctx := gousb.NewContext()
+// 	defer ctx.Close()
 
-	// Debugging can be turned on; this shows some of the inner workings of the libusb package.
-	ctx.Debug(*debug)
+// 	// Debugging can be turned on; this shows some of the inner workings of the libusb package.
+// 	ctx.Debug(*debug)
 
-	devs, err := ctx.OpenDevices(func(desc *gousb.DeviceDesc) bool {
-		// The usbid package can be used to print out human readable information.
+// 	devs, err := ctx.OpenDevices(func(desc *gousb.DeviceDesc) bool {
+// 		// The usbid package can be used to print out human readable information.
 
-		fmt.Printf("%03d.%03d %s:%s %s\n", desc.Bus, desc.Address, desc.Vendor, desc.Product, usbid.Describe(desc))
-		fmt.Printf("  Protocol: %s\n", usbid.Classify(desc))
+// 		fmt.Printf("%03d.%03d %s:%s %s\n", desc.Bus, desc.Address, desc.Vendor, desc.Product, usbid.Describe(desc))
+// 		fmt.Printf("  Protocol: %s\n", usbid.Classify(desc))
 
-		return false
-	})
+// 		return false
+// 	})
 
-	defer func() {
-		for _, d := range devs {
-			d.Close()
-		}
-	}()
+// 	defer func() {
+// 		for _, d := range devs {
+// 			d.Close()
+// 		}
+// 	}()
 
-	if err != nil {
-		log.Fatalf("list: %s", err)
-	}
+// 	if err != nil {
+// 		log.Fatalf("list: %s", err)
+// 	}
 
-	for _, dev := range devs {
+// 	for _, dev := range devs {
 
-		_ = dev
-	}
-}
+// 		_ = dev
+// 	}
+// }
 
 func command_devices_functions_find_sdcard_device() (devices []*block.Partition, err error) {
 	block, err := ghw.Block()

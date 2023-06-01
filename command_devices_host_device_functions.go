@@ -4,16 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func command_devices_host_device_functions_get_host_device_info() (data_out *host_device_payloads_information_data_t, err error) {
+func command_devices_host_device_functions_get_host_device_info() (data_out *Host_device_payloads_information_data_t, err error) {
 
 	/* get all the info about the machine */
-	data_out = &host_device_payloads_information_data_t{}
-	err = data_out.get()
+	data_out = &Host_device_payloads_information_data_t{}
+	err = data_out.Get()
 	/**/
 
 	return
@@ -105,7 +104,7 @@ func command_devices_host_device_functions_add_device(name string, description s
 		UserID:   user_id,
 	}
 
-	err = command_devices_host_device_functions_generate_credentials(&reg_data, "./credentials.json", false)
+	err = command_devices_host_device_functions_generate_credentials(&reg_data, false)
 	if err != nil {
 		fmt.Printf("device registered but failed to write credentials file. You can still save the credentials using ")
 	}
@@ -122,13 +121,33 @@ func command_devices_host_device_functions_get_credentials_from_server() (err er
 	return
 }
 
-func command_devices_host_device_functions_generate_credentials(register_data *host_device_credentials_t, out_file string, print_to_stdout bool) (err error) {
+func command_devices_host_device_functions_generate_credentials(register_data *host_device_credentials_t, print_to_stdout bool) (err error) {
 
 	if register_data == nil {
 		/* not register data present */
 	}
 
-	out_file = strings.TrimSpace(out_file)
+	home_dirname, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+
+	/* check if .config/c3rl exist or not */
+	_, err = os.Stat(home_dirname + "/.config/c3rl")
+	if os.IsNotExist(err) {
+		err = os.Mkdir(home_dirname+"/.config/c3rl", os.ModePerm)
+		if err != nil {
+			return
+		}
+	} else if err == nil {
+
+	} else {
+		return err
+	}
+
+	configuration_out_file := home_dirname + "/.config/c3rl/credentials.json"
+
+	out_file := configuration_out_file
 
 	if out_file == "" && !print_to_stdout {
 		err = fmt.Errorf("no output file specified")
