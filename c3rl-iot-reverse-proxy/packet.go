@@ -15,13 +15,14 @@ func packet_encapsulate(connection_id []byte, endpoint_host string, endpoint_por
 	startpoint_host_uint32 := net.ParseIP(startpoint_host)
 
 	packet := pb.WebSocketPacketPayload{
-		EHost:        binary.BigEndian.Uint32(endpoint_host_uint32.To4()),
-		EPort:        uint32(endpoint_port),
-		SHost:        binary.BigEndian.Uint32(startpoint_host_uint32.To4()),
-		SPort:        uint32(startpoint_port),
-		Data:         data,
-		ConnectionId: connection_id,
-		PacketType:   WEBSOCKET_PACKET_TYPE_PROXY,
+		EHost:         binary.BigEndian.Uint32(endpoint_host_uint32.To4()),
+		EPort:         uint32(endpoint_port),
+		SHost:         binary.BigEndian.Uint32(startpoint_host_uint32.To4()),
+		SPort:         uint32(startpoint_port),
+		Data:          data,
+		ConnectionId:  connection_id,
+		PacketType:    WEBSOCKET_PACKET_TYPE_PROXY,
+		StartpointUid: []byte(main_app_startpoint_uid),
 	}
 
 	packet_bytes, err = proto.Marshal(&packet)

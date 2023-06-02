@@ -82,18 +82,25 @@ func websocket_init_auth() (err error) {
 	}
 
 	/* send endpoint uid in case of startpoint */
-	uid_to_send := main_app_credentials.UID
-	if main_app_direction == "startpoint" {
-		uid_to_send = main_app_endpoint_uid
-	}
+
+	endpoint_uid := main_app_credentials.UID
+
+	var device_id_to_send string
+
+	device_id_to_send = main_app_credentials.DeviceID.Hex()
+
+	var user_id_to_send string
+
+	user_id_to_send = main_app_credentials.UserID.Hex()
 
 	auth_data := pb.WebSocketAuthPayload{
 		ConnectionType: uint32(conn_type),
-		Uid:            []byte(uid_to_send),
 		Token:          []byte(main_app_auth_data.Token),
-		UserId:         []byte(main_app_credentials.UserID.Hex()),
-		DeviceId:       []byte(main_app_credentials.DeviceID.Hex()),
+		UserId:         []byte(user_id_to_send),
+		DeviceId:       []byte(device_id_to_send),
 		DeviceData:     main_app_machine_data,
+		EndpointUid:    []byte(endpoint_uid),
+		StartpointUid:  []byte(main_app_startpoint_uid),
 	}
 
 	auth_data_bytes, err := proto.Marshal(&auth_data)

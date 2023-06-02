@@ -43,7 +43,6 @@ func command_proxy_subcommands() (commands cli.Commands) {
 				Destination: &command_proxy_startpoint_config_file,
 				Required:    true,
 			},
-
 			&cli.StringFlag{
 				Name:        "credentials",
 				Aliases:     []string{"cr"},
@@ -52,7 +51,6 @@ func command_proxy_subcommands() (commands cli.Commands) {
 				Destination: &command_proxy_credentials_file,
 				Required:    false,
 			},
-
 			&cli.StringFlag{
 				Name:        "uid",
 				Aliases:     []string{"u"},
@@ -137,17 +135,16 @@ func command_proxy_startpoint(cCtx *cli.Context) (err error) {
 	}
 	/* */
 
+	auth_data_proxy := pb.Proxy_auth_data_t{
+		Token: auth_data.Token,
+	}
+
 	/* get credentials */
 	credentials, err := credentials_load_credentials(command_proxy_credentials_file)
 	if err != nil {
 		return
 	}
 	/**/
-
-	auth_data_proxy := pb.Proxy_auth_data_t{
-		Token: auth_data.Token,
-	}
-
 	/* get machine data */
 
 	machine_data := Host_device_payloads_information_data_t{}
