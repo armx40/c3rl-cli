@@ -83,7 +83,7 @@ func websocket_init_auth() (err error) {
 
 	/* send endpoint uid in case of startpoint */
 
-	endpoint_uid := main_app_credentials.UID
+	endpoint_uid := main_app_endpoint_uid
 
 	var device_id_to_send string
 

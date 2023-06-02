@@ -14,7 +14,7 @@ const ENDPOINT_CONNECTION_TIMEOUT_SECONDS = 5 * 60 // 5 minutes
 
 const ENDPOINT_CONNECTION_BUFFER_SIZE = 32 * 1024
 
-const ENDPOINT_DEADLINE_ENABLED = false
+const ENDPOINT_DEADLINE_ENABLED = true
 
 type endpoint_connection_id_t string
 
@@ -28,14 +28,15 @@ func (s endpoint_connection_id_t) set_from_bytes(b []byte) {
 }
 
 type endpoint_connection_t struct {
-	Conn         net.Conn
-	EPort        uint
-	EHost        string
-	ConnOpened   bool
-	Time         time.Time
-	ConnectionID endpoint_connection_id_t
-	Endpoint     *endpoint_t
-	Buffer       []byte
+	Conn          net.Conn
+	EPort         uint
+	EHost         string
+	ConnOpened    bool
+	Time          time.Time
+	ConnectionID  endpoint_connection_id_t
+	Endpoint      *endpoint_t
+	Buffer        []byte
+	StartPointUID string
 }
 
 func (e *endpoint_connection_t) init() (err error) {
@@ -64,6 +65,8 @@ func (e *endpoint_connection_t) destroy() (err error) {
 	e.ConnOpened = false
 
 	delete(endpoint.EndpointConnections, e.ConnectionID)
+
+	log.Printf("destroyed endpoint connection for host: %s and port %d current count: %d\n", e.EHost, e.EPort, len(endpoint.EndpointConnections))
 
 	return
 }
@@ -101,7 +104,7 @@ func (e *endpoint_connection_t) open() (err error) {
 
 func (e *endpoint_connection_t) read_routine() (err error) {
 
-	log.Printf("starting endpoint read routine for host: %s and port %d\n", e.EHost, e.EPort)
+	log.Printf("starting endpoint read routine for host: %s and port %d current count: %d\n", e.EHost, e.EPort, len(endpoint.EndpointConnections))
 
 	var n int
 
@@ -110,6 +113,7 @@ func (e *endpoint_connection_t) read_routine() (err error) {
 
 			n, err = e.Conn.Read(e.Buffer)
 			if err != nil {
+				e.destroy()
 				return
 			}
 
@@ -128,7 +132,7 @@ func (e *endpoint_connection_t) read_routine() (err error) {
 func (e *endpoint_connection_t) process_read(data []byte) (err error) {
 
 	/* encapsulate packet and send to remote server */
-	encapsulated_bytes, err := packet_encapsulate(e.ConnectionID.bytes(), e.EHost, e.EPort, "127.0.0.1", 0, data)
+	encapsulated_bytes, err := packet_encapsulate(e.StartPointUID, e.ConnectionID.bytes(), e.EHost, e.EPort, "127.0.0.1", 0, data)
 	if err != nil {
 		return
 	}
@@ -250,10 +254,11 @@ func (e *endpoint_t) add_connection_from_packet(packet *pb.WebSocketPacketPayloa
 	conn_id := endpoint_connection_id_t(packet.ConnectionId)
 
 	conn := endpoint_connection_t{
-		ConnectionID: conn_id,
-		Time:         curr_time,
-		EHost:        host.To4().String(),
-		EPort:        uint(packet.EPort),
+		ConnectionID:  conn_id,
+		Time:          curr_time,
+		EHost:         host.To4().String(),
+		EPort:         uint(packet.EPort),
+		StartPointUID: string(packet.StartpointUid),
 	}
 
 	e.EndpointConnections[conn_id] = &conn

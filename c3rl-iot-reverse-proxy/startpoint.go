@@ -8,6 +8,8 @@ import (
 	"net"
 	"os"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const STARTPOINT_REMOTE_CONNECTION_BUFFER_SIZE = 32 * 1024
@@ -88,7 +90,7 @@ func (e *startpoint_remote_connection_t) read_routine() (err error) {
 func (e *startpoint_remote_connection_t) process_read(data []byte) (err error) {
 
 	/* encapsulate packet and send to remote server */
-	encapsulated_bytes, err := packet_encapsulate(e.ConnectionID.bytes(), e.EndPointHost, e.EndPointPort, e.StartPointHost, e.StartPointPort, data)
+	encapsulated_bytes, err := packet_encapsulate(main_app_startpoint_uid, e.ConnectionID.bytes(), e.EndPointHost, e.EndPointPort, e.StartPointHost, e.StartPointPort, data)
 	if err != nil {
 		return
 	}
@@ -275,8 +277,14 @@ func (e *startpoint_t) init_connections_from_config() (err error) {
 }
 
 func (e *startpoint_t) get_remote_connection_id(local_host string, local_port uint, remote_host string, remote_port uint) (conn_id startpoint_connection_id_t) {
-	conn_id = startpoint_connection_id_t(fmt.Sprintf("r-%s-%d-%s-%d-%d", local_host, local_port, remote_host, remote_port, e.StartpointConnectionsCounter))
-	e.StartpointConnectionsCounter += 1
+
+	/* temp uuid */
+	uuid_str := uuid.NewString()
+	/**/
+	// conn_id = startpoint_connection_id_t(fmt.Sprintf("r-%s-%s-%d-%s-%d-%d", uuid_str, local_host, local_port, remote_host, remote_port, e.StartpointConnectionsCounter))
+
+	conn_id = startpoint_connection_id_t(fmt.Sprintf("r-%s", uuid_str))
+	// e.StartpointConnectionsCounter += 1
 	return
 }
 

@@ -9,7 +9,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func packet_encapsulate(connection_id []byte, endpoint_host string, endpoint_port uint, startpoint_host string, startpoint_port uint, data []byte) (packet_bytes []byte, err error) {
+func packet_encapsulate(startpoint_uid string, connection_id []byte, endpoint_host string, endpoint_port uint, startpoint_host string, startpoint_port uint, data []byte) (packet_bytes []byte, err error) {
 
 	endpoint_host_uint32 := net.ParseIP(endpoint_host)
 	startpoint_host_uint32 := net.ParseIP(startpoint_host)
@@ -22,7 +22,8 @@ func packet_encapsulate(connection_id []byte, endpoint_host string, endpoint_por
 		Data:          data,
 		ConnectionId:  connection_id,
 		PacketType:    WEBSOCKET_PACKET_TYPE_PROXY,
-		StartpointUid: []byte(main_app_startpoint_uid),
+		StartpointUid: []byte(startpoint_uid),
+		EndpointUid:   []byte(main_app_endpoint_uid),
 	}
 
 	packet_bytes, err = proto.Marshal(&packet)

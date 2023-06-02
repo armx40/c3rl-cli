@@ -44,12 +44,12 @@ func StartApp(direction string, config_file string, endpoint_uid string, credent
 	main_app_credentials = credentials
 	main_app_machine_data = machine_data
 
-	main_app_endpoint_uid = endpoint_uid
-
 	if direction == "startpoint" {
 		main_app_startpoint_uid = credentials.UID
+		main_app_endpoint_uid = endpoint_uid
 	} else {
 		main_app_startpoint_uid = ""
+		main_app_endpoint_uid = credentials.UID
 	}
 
 	if main_app_direction == "startpoint" {
