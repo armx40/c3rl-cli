@@ -1,223 +1,222 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
-	"strconv"
-	"strings"
+
+	"github.com/denisbrodbeck/machineid"
+	"github.com/jaypipes/ghw"
 )
 
 /****************************** device id **************************************/
 
 type host_device_payloads_information_data_device_id_t struct {
-	DBUSMachineID string
+	MachineID string
 }
 
 func (h *host_device_payloads_information_data_device_id_t) get() (err error) {
 
-	cmd_out, err := helper_function_get_command_output("cat", []string{"/var/lib/dbus/machine-id"})
+	id, err := machineid.ID()
 	if err != nil {
-		return
+		log.Fatal(err)
 	}
 
-	h.DBUSMachineID = strings.TrimSpace(string(cmd_out))
+	h.MachineID = id
+
 	return
 }
 
-/****************************** lspci ******************************************/
-type host_device_payloads_information_data_lspci_t struct {
-	Devices []string
+/****************************** baseboard ******************************************/
+
+type host_device_payloads_information_data_baseboard_t struct {
+	AssetTag     string
+	SerialNumber string
+	Vendor       string
+	Version      string
+	Product      string
 }
 
-func (h *host_device_payloads_information_data_lspci_t) get() (err error) {
+func (h *host_device_payloads_information_data_baseboard_t) get() (err error) {
 
-	cmd_out, err := helper_function_get_command_output("lspci", []string{})
+	baseboard, err := ghw.Baseboard()
 	if err != nil {
-		return
+		fmt.Printf("Error getting baseboard info: %v", err)
 	}
 
-	devices := strings.Split(string(cmd_out), "\n")
+	h.AssetTag = baseboard.AssetTag
+	h.SerialNumber = baseboard.SerialNumber
+	h.Vendor = baseboard.Vendor
+	h.Version = baseboard.Version
+	h.Product = baseboard.Product
 
-	for i := range devices {
-		devices[i] = strings.TrimSpace(devices[i])
-	}
-
-	h.Devices = devices
 	return
-
 }
 
-/****************************** lscpu ******************************************/
-type host_device_payloads_information_data_lscpu_single_block_t struct {
-	Range       string
-	Size        uint64
-	State       string
-	IsRemovable bool
-	Block       string
-	Node        string
+/****************************** bios ******************************************/
+
+type host_device_payloads_information_data_bios_t struct {
+	Vendor  string
+	Version string
+	Date    string
 }
 
-type host_device_payloads_information_data_lscpu_t struct {
-	CPUs          []host_device_payloads_information_data_lscpu_single_block_t
-	CPUName       string
-	Architecture  string
-	ByteOrder     string
-	NumberOfCores uint16
-	Vendor        string
-}
+func (h *host_device_payloads_information_data_bios_t) get() (err error) {
 
-func (h *host_device_payloads_information_data_lscpu_t) get() (err error) {
-
-	/* get cpu name */
-	cmd_out, err := helper_function_get_command_output("lscpu", []string{"-J"})
+	bios, err := ghw.BIOS()
 	if err != nil {
-		return
+		fmt.Printf("Error getting bios info: %v", err)
 	}
-	/**/
 
-	lscpu_data := make(map[string][](map[string]string))
+	h.Date = bios.Date
+	h.Vendor = bios.Vendor
+	h.Version = bios.Version
 
-	err = json.Unmarshal(cmd_out, &lscpu_data)
+	return
+}
 
+/****************************** gpu ******************************************/
+
+type host_device_payloads_information_data_gpu_t struct {
+	Devices string // for now just store it in string
+}
+
+func (h *host_device_payloads_information_data_gpu_t) get() (err error) {
+
+	gpu, err := ghw.GPU()
 	if err != nil {
-		return
+		fmt.Printf("Error getting gpu info: %v", err)
 	}
-
-	lscpu_key, ok := lscpu_data["lscpu"]
-	if !ok {
-		log.Println(lscpu_data["lscpu"])
-		err = fmt.Errorf("invalid response from lscpu")
-		return
-	}
-
-	for i := range lscpu_key {
-
-		if (lscpu_key[i]["field"]) == "Architecture:" {
-			h.Architecture = lscpu_key[i]["data"]
-		}
-
-		if (lscpu_key[i]["field"]) == "Byte Order:" {
-			h.ByteOrder = lscpu_key[i]["data"]
-		}
-
-		if (lscpu_key[i]["field"]) == "Model name:" {
-			h.CPUName = lscpu_key[i]["data"]
-		}
-
-		if (lscpu_key[i]["field"]) == "Vendor ID:" {
-			h.Vendor = lscpu_key[i]["data"]
-		}
-
-		if (lscpu_key[i]["field"]) == "CPU(s):" {
-
-			number_of_cores, err := strconv.ParseUint(lscpu_key[i]["data"], 10, 16)
-
-			if err != nil {
-				err = fmt.Errorf("failed to get number of cores")
-				return err
-			}
-
-			h.NumberOfCores = uint16(number_of_cores)
-		}
-	}
-
-	/* get core wise data */
-
-	// cmd_out, err := helper_function_get_command_output("lsmem", []string{"-r", "-n", "-b", "-o", "RANGE,SIZE,STATE,REMOVABLE,BLOCK,NODE"})
-	// if err != nil {
-	// 	return
-	// }
-
-	// devices_lines := strings.Split(string(cmd_out), "\n")
-
-	// for i := range devices_lines {
-
-	// 	line := strings.TrimSpace(devices_lines[i])
-	// 	if line == "" {
-	// 		continue
-	// 	}
-	// 	/* get values from single line */
-	// 	line_values := strings.Split(line, " ")
-
-	// 	if len(line_values) != 6 {
-	// 		err = fmt.Errorf("invalid number values for mem")
-	// 		return
-	// 	}
-
-	// 	size_bytes, err := strconv.ParseUint(line_values[1], 10, 64)
-
-	// 	if err != nil {
-	// 		err = fmt.Errorf("failed to get blk size")
-	// 		return err
-	// 	}
-
-	// 	h.Devices = append(h.Devices, host_device_payloads_information_data_lsmem_single_block_t{
-	// 		Range:       line_values[0],
-	// 		Size:        size_bytes,
-	// 		State:       line_values[2],
-	// 		Block:       line_values[4],
-	// 		Node:        line_values[5],
-	// 		IsRemovable: line_values[3] == "yes",
-	// 	})
-	// }
+	h.Devices = gpu.JSONString(false)
 
 	return
 
 }
 
-/****************************** lsmem ******************************************/
+/****************************** network ******************************************/
 
-type host_device_payloads_information_data_lsmem_single_block_t struct {
-	Range       string
-	Size        uint64
-	State       string
-	IsRemovable bool
-	Block       string
-	Node        string
+type host_device_payloads_information_data_network_t struct {
+	Devices string // for now just store it in string
 }
 
-type host_device_payloads_information_data_lsmem_t struct {
-	Devices []host_device_payloads_information_data_lsmem_single_block_t
-}
+func (h *host_device_payloads_information_data_network_t) get() (err error) {
 
-func (h *host_device_payloads_information_data_lsmem_t) get() (err error) {
-
-	cmd_out, err := helper_function_get_command_output("lsmem", []string{"-r", "-n", "-b", "-o", "RANGE,SIZE,STATE,REMOVABLE,BLOCK,NODE"})
+	network, err := ghw.Network()
 	if err != nil {
-		return
+		fmt.Printf("Error getting network info: %v", err)
 	}
 
-	devices_lines := strings.Split(string(cmd_out), "\n")
+	h.Devices = network.JSONString(false)
 
-	for i := range devices_lines {
+	return
 
-		line := strings.TrimSpace(devices_lines[i])
-		if line == "" {
-			continue
+}
+
+/****************************** pci ******************************************/
+type host_device_payloads_information_data_pci_t struct {
+	Devices string // for now just store it in string
+}
+
+func (h *host_device_payloads_information_data_pci_t) get() (err error) {
+
+	pci, err := ghw.PCI()
+	if err != nil {
+		fmt.Printf("Error getting pci info: %v", err)
+	}
+
+	h.Devices = pci.JSONString(false)
+
+	return
+
+}
+
+/****************************** cpu ******************************************/
+
+type host_device_payloads_information_data_cpu_core_t struct {
+	NumThreads        uint32
+	LogicalProcessors []int
+}
+type host_device_payloads_information_data_cpu_single_block_t struct {
+	NumCores     uint32
+	NumThreads   uint32
+	Vendor       string
+	Model        string
+	Capabilities []string
+	Cores        []host_device_payloads_information_data_cpu_core_t
+}
+
+type host_device_payloads_information_data_cpu_t struct {
+	CPUs         []host_device_payloads_information_data_cpu_single_block_t
+	TotalCores   uint32
+	TotalThreads uint32
+}
+
+func (h *host_device_payloads_information_data_cpu_t) get() (err error) {
+
+	cpu, err := ghw.CPU()
+	if err != nil {
+		fmt.Printf("Error getting cpu info: %v", err)
+	}
+
+	h.TotalCores = cpu.TotalCores
+	h.TotalThreads = cpu.TotalThreads
+
+	for i := range cpu.Processors {
+
+		cores := []host_device_payloads_information_data_cpu_core_t{}
+
+		for j := range cpu.Processors[i].Cores {
+			cores = append(cores, host_device_payloads_information_data_cpu_core_t{
+				NumThreads:        cpu.Processors[i].Cores[j].NumThreads,
+				LogicalProcessors: cpu.Processors[i].Cores[j].LogicalProcessors,
+			})
 		}
-		/* get values from single line */
-		line_values := strings.Split(line, " ")
 
-		if len(line_values) != 6 {
-			err = fmt.Errorf("invalid number values for mem")
-			return
-		}
+		h.CPUs = append(h.CPUs, host_device_payloads_information_data_cpu_single_block_t{
+			NumCores:     cpu.Processors[i].NumCores,
+			NumThreads:   cpu.Processors[i].NumThreads,
+			Vendor:       cpu.Processors[i].Vendor,
+			Model:        cpu.Processors[i].Model,
+			Capabilities: cpu.Processors[i].Capabilities,
+		})
+	}
 
-		size_bytes, err := strconv.ParseUint(line_values[1], 10, 64)
+	return
 
-		if err != nil {
-			err = fmt.Errorf("failed to get blk size")
-			return err
-		}
+}
 
-		h.Devices = append(h.Devices, host_device_payloads_information_data_lsmem_single_block_t{
-			Range:       line_values[0],
-			Size:        size_bytes,
-			State:       line_values[2],
-			Block:       line_values[4],
-			Node:        line_values[5],
-			IsRemovable: line_values[3] == "yes",
+/****************************** memory ******************************************/
+
+type host_device_payloads_information_data_memory_single_block_t struct {
+	Size         int64
+	Label        string
+	Vendor       string
+	Location     string
+	SerialNumber string
+}
+
+type host_device_payloads_information_data_memory_t struct {
+	Devices     []host_device_payloads_information_data_memory_single_block_t
+	TotalSize   int64
+	TotalUsable int64
+}
+
+func (h *host_device_payloads_information_data_memory_t) get() (err error) {
+
+	memory, err := ghw.Memory()
+	if err != nil {
+		fmt.Printf("Error getting memory info: %v", err)
+	}
+
+	h.TotalSize = memory.TotalPhysicalBytes
+	h.TotalSize = memory.TotalUsableBytes
+
+	for i := range memory.Modules {
+		h.Devices = append(h.Devices, host_device_payloads_information_data_memory_single_block_t{
+			Size:         memory.Modules[i].SizeBytes,
+			Label:        memory.Modules[i].Label,
+			Vendor:       memory.Modules[i].Vendor,
+			Location:     memory.Modules[i].Location,
+			SerialNumber: memory.Modules[i].SerialNumber,
 		})
 	}
 
@@ -227,82 +226,88 @@ func (h *host_device_payloads_information_data_lsmem_t) get() (err error) {
 
 /****************************** lsusb ******************************************/
 
-type host_device_payloads_information_data_lsusb_t struct {
-	Devices []string
-}
+// type host_device_payloads_information_data_lsusb_t struct {
+// 	Devices []string
+// }
 
-func (h *host_device_payloads_information_data_lsusb_t) get() (err error) {
+// func (h *host_device_payloads_information_data_lsusb_t) get() (err error) {
 
-	cmd_out, err := helper_function_get_command_output("lsusb", []string{})
-	if err != nil {
-		return
-	}
+// 	blocks, err := ghw.PCI()
+// 	if err != nil {
+// 		fmt.Printf("Error getting memory info: %v", err)
+// 	}
 
-	devices := strings.Split(string(cmd_out), "\n")
+// 	cmd_out, err := helper_function_get_command_output("lsusb", []string{})
+// 	if err != nil {
+// 		return
+// 	}
 
-	for i := range devices {
-		devices[i] = strings.TrimSpace(devices[i])
-	}
+// 	devices := strings.Split(string(cmd_out), "\n")
 
-	h.Devices = devices
-	return
-}
+// 	for i := range devices {
+// 		devices[i] = strings.TrimSpace(devices[i])
+// 	}
 
-/****************************** lsblk ******************************************/
-type host_device_payloads_information_data_lsblk_single_block_t struct {
+// 	h.Devices = devices
+// 	return
+// }
+
+/****************************** blocks ******************************************/
+type host_device_payloads_information_data_block_single_partition_t struct {
 	Name        string
+	Label       string
 	Size        uint64
 	Mountpoint  string
 	IsRemovable bool
 }
 
-type host_device_payloads_information_data_lsblk_t struct {
-	Devices []host_device_payloads_information_data_lsblk_single_block_t
+type host_device_payloads_information_data_block_single_disk_t struct {
+	Name         string
+	Size         uint64
+	IsRemovable  bool
+	Vendor       string
+	Model        string
+	SerialNumber string
+	Partitions   []host_device_payloads_information_data_block_single_partition_t
 }
 
-func (h *host_device_payloads_information_data_lsblk_t) get() (err error) {
+type host_device_payloads_information_data_block_t struct {
+	Disks []host_device_payloads_information_data_block_single_disk_t
+}
 
-	cmd_out, err := helper_function_get_command_output("lsblk", []string{"-r", "-n", "-b", "-o", "NAME,SIZE,MOUNTPOINT,RM"})
+func (h *host_device_payloads_information_data_block_t) get() (err error) {
+
+	blocks, err := ghw.Block()
 	if err != nil {
-		return
+		fmt.Printf("Error getting block info: %v", err)
 	}
 
-	devices_lines := strings.Split(string(cmd_out), "\n")
+	for i := range blocks.Disks {
 
-	for i := range devices_lines {
+		/* get partitions */
 
-		line := strings.TrimSpace(devices_lines[i])
-		if line == "" {
-			continue
-		}
-		/* get values from single line */
-		line_values := strings.Split(line, " ")
+		tmp_partitions := []host_device_payloads_information_data_block_single_partition_t{}
 
-		if len(line_values) != 4 {
-			err = fmt.Errorf("invalid number values for blk")
-			return
-		}
+		for j := range blocks.Disks[i].Partitions {
+			tmp_partitions = append(tmp_partitions, host_device_payloads_information_data_block_single_partition_t{
+				Name:        blocks.Disks[i].Partitions[j].Name,
+				Label:       blocks.Disks[i].Partitions[j].Label,
+				Size:        blocks.Disks[i].Partitions[j].SizeBytes,
+				Mountpoint:  blocks.Disks[i].Partitions[j].MountPoint,
+				IsRemovable: blocks.Disks[i].Partitions[j].Disk.IsRemovable,
+			})
 
-		size_bytes, err := strconv.ParseUint(line_values[1], 10, 64)
-
-		if err != nil {
-			err = fmt.Errorf("failed to get blk size")
-			return err
 		}
 
-		isremovable_int, err := strconv.ParseUint(line_values[3], 10, 8)
-
-		if err != nil {
-			err = fmt.Errorf("failed to get if device is removable")
-			return err
-		}
-
-		h.Devices = append(h.Devices, host_device_payloads_information_data_lsblk_single_block_t{
-			Name:        line_values[0],
-			Size:        size_bytes,
-			Mountpoint:  line_values[2],
-			IsRemovable: isremovable_int == 1,
+		h.Disks = append(h.Disks, host_device_payloads_information_data_block_single_disk_t{
+			Name:         blocks.Disks[i].Name,
+			Size:         blocks.Disks[i].SizeBytes,
+			IsRemovable:  blocks.Disks[i].IsRemovable,
+			Vendor:       blocks.Disks[i].Vendor,
+			Model:        blocks.Disks[i].Model,
+			SerialNumber: blocks.Disks[i].SerialNumber,
 		})
+
 	}
 
 	return
@@ -360,11 +365,11 @@ func (h *host_device_payloads_information_data_uname_t) get() (err error) {
 	}
 	h.Processor = string(cmd_out)
 
-	cmd_out, err = helper_function_get_command_output("uname", []string{"-i"})
-	if err != nil {
-		return
-	}
-	h.HardwarePlatform = string(cmd_out)
+	// cmd_out, err = helper_function_get_command_output("uname", []string{"-i"})
+	// if err != nil {
+	// 	return
+	// }
+	// h.HardwarePlatform = string(cmd_out)
 
 	cmd_out, err = helper_function_get_command_output("uname", []string{"-o"})
 	if err != nil {
@@ -378,13 +383,16 @@ func (h *host_device_payloads_information_data_uname_t) get() (err error) {
 /************************************************************************/
 
 type Host_device_payloads_information_data_t struct {
-	Uname    host_device_payloads_information_data_uname_t
-	USB      host_device_payloads_information_data_lsusb_t
-	PCI      host_device_payloads_information_data_lspci_t
-	DeviceID host_device_payloads_information_data_device_id_t
-	Blocks   host_device_payloads_information_data_lsblk_t
-	Memory   host_device_payloads_information_data_lsmem_t
-	CPU      host_device_payloads_information_data_lscpu_t
+	Uname     host_device_payloads_information_data_uname_t
+	PCI       host_device_payloads_information_data_pci_t
+	DeviceID  host_device_payloads_information_data_device_id_t
+	Blocks    host_device_payloads_information_data_block_t
+	Memory    host_device_payloads_information_data_memory_t
+	CPU       host_device_payloads_information_data_cpu_t
+	Network   host_device_payloads_information_data_network_t
+	Baseboard host_device_payloads_information_data_baseboard_t
+	GPU       host_device_payloads_information_data_gpu_t
+	BIOS      host_device_payloads_information_data_bios_t
 }
 
 func (h *Host_device_payloads_information_data_t) Get() (err error) {
@@ -397,10 +405,10 @@ func (h *Host_device_payloads_information_data_t) Get() (err error) {
 	/**/
 
 	/* usb */
-	err = h.USB.get()
-	if err != nil {
-		return
-	}
+	// err = h.USB.get()
+	// if err != nil {
+	// 	return
+	// }
 	/**/
 
 	/* pci */
@@ -438,5 +446,24 @@ func (h *Host_device_payloads_information_data_t) Get() (err error) {
 	}
 	/**/
 
+	err = h.Baseboard.get()
+	if err != nil {
+		return
+	}
+
+	err = h.BIOS.get()
+	if err != nil {
+		return
+	}
+
+	err = h.Network.get()
+	if err != nil {
+		return
+	}
+
+	err = h.GPU.get()
+	if err != nil {
+		return
+	}
 	return
 }
