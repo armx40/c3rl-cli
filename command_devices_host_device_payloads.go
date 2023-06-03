@@ -7,7 +7,9 @@ import (
 
 	"github.com/denisbrodbeck/machineid"
 	"github.com/jaypipes/ghw"
+
 	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
 /****************************** device id **************************************/
@@ -40,6 +42,9 @@ type host_device_payloads_information_data_baseboard_t struct {
 
 func (h *host_device_payloads_information_data_baseboard_t) get() (err error) {
 
+	if runtime.GOOS == "darwin" {
+		return nil
+	}
 	baseboard, err := ghw.Baseboard()
 	if err != nil {
 		fmt.Printf("Error getting baseboard info: %v", err)
@@ -65,6 +70,10 @@ type host_device_payloads_information_data_bios_t struct {
 
 func (h *host_device_payloads_information_data_bios_t) get() (err error) {
 
+	if runtime.GOOS == "darwin" {
+		return nil
+	}
+
 	bios, err := ghw.BIOS()
 	if err != nil {
 		fmt.Printf("Error getting bios info: %v", err)
@@ -86,6 +95,10 @@ type host_device_payloads_information_data_gpu_t struct {
 
 func (h *host_device_payloads_information_data_gpu_t) get() (err error) {
 
+	if runtime.GOOS == "darwin" {
+		return nil
+	}
+
 	gpu, err := ghw.GPU()
 	if err != nil {
 		fmt.Printf("Error getting gpu info: %v", err)
@@ -105,15 +118,18 @@ type host_device_payloads_information_data_network_t struct {
 
 func (h *host_device_payloads_information_data_network_t) get() (err error) {
 
+	if runtime.GOOS == "darwin" {
+		return nil
+	}
 	network, err := ghw.Network()
 	if err != nil {
 		fmt.Printf("Error getting network info: %v", err)
-		return
+		return err
 	}
 
 	h.Devices = network.JSONString(false)
 
-	return
+	return err
 
 }
 
@@ -125,17 +141,15 @@ type host_device_payloads_information_data_pci_t struct {
 func (h *host_device_payloads_information_data_pci_t) get() (err error) {
 
 	if runtime.GOOS == "darwin" {
-
-	} else {
-		pci, err := ghw.PCI()
-		if err != nil {
-			fmt.Printf("Error getting pci info: %v", err)
-			return err
-		}
-
-		h.Devices = pci.JSONString(false)
-
+		return nil
 	}
+	pci, err := ghw.PCI()
+	if err != nil {
+		fmt.Printf("Error getting pci info: %v", err)
+		return err
+	}
+
+	h.Devices = pci.JSONString(false)
 
 	return
 
@@ -183,7 +197,7 @@ func (h *host_device_payloads_information_data_cpu_t) get() (err error) {
 
 			h.CPUs = append(h.CPUs, host_device_payloads_information_data_cpu_single_block_t{
 				NumCores:     uint32(cpu_info[i].Cores),
-				NumThreads:   uint32(cpu_info[i].Cores),
+				NumThreads:   uint32(cpu_info[i].Cores) * 2,
 				Vendor:       cpu_info[i].VendorID,
 				Model:        cpu_info[i].Model,
 				Capabilities: cpu_info[i].Flags,
@@ -193,36 +207,34 @@ func (h *host_device_payloads_information_data_cpu_t) get() (err error) {
 
 		return err
 
-	} else {
-		cpu, err := ghw.CPU()
-		if err != nil {
-			fmt.Printf("Error getting cpu info: %v", err)
-			return err
-		}
+	}
+	cpu, err := ghw.CPU()
+	if err != nil {
+		fmt.Printf("Error getting cpu info: %v", err)
+		return err
+	}
 
-		h.TotalCores = cpu.TotalCores
-		h.TotalThreads = cpu.TotalThreads
+	h.TotalCores = cpu.TotalCores
+	h.TotalThreads = cpu.TotalThreads
 
-		for i := range cpu.Processors {
+	for i := range cpu.Processors {
 
-			cores := []host_device_payloads_information_data_cpu_core_t{}
+		cores := []host_device_payloads_information_data_cpu_core_t{}
 
-			for j := range cpu.Processors[i].Cores {
-				cores = append(cores, host_device_payloads_information_data_cpu_core_t{
-					NumThreads:        cpu.Processors[i].Cores[j].NumThreads,
-					LogicalProcessors: cpu.Processors[i].Cores[j].LogicalProcessors,
-				})
-			}
-
-			h.CPUs = append(h.CPUs, host_device_payloads_information_data_cpu_single_block_t{
-				NumCores:     cpu.Processors[i].NumCores,
-				NumThreads:   cpu.Processors[i].NumThreads,
-				Vendor:       cpu.Processors[i].Vendor,
-				Model:        cpu.Processors[i].Model,
-				Capabilities: cpu.Processors[i].Capabilities,
+		for j := range cpu.Processors[i].Cores {
+			cores = append(cores, host_device_payloads_information_data_cpu_core_t{
+				NumThreads:        cpu.Processors[i].Cores[j].NumThreads,
+				LogicalProcessors: cpu.Processors[i].Cores[j].LogicalProcessors,
 			})
 		}
 
+		h.CPUs = append(h.CPUs, host_device_payloads_information_data_cpu_single_block_t{
+			NumCores:     cpu.Processors[i].NumCores,
+			NumThreads:   cpu.Processors[i].NumThreads,
+			Vendor:       cpu.Processors[i].Vendor,
+			Model:        cpu.Processors[i].Model,
+			Capabilities: cpu.Processors[i].Capabilities,
+		})
 	}
 
 	return
@@ -247,6 +259,18 @@ type host_device_payloads_information_data_memory_t struct {
 
 func (h *host_device_payloads_information_data_memory_t) get() (err error) {
 
+	if runtime.GOOS == "darwin" {
+
+		v, err := mem.VirtualMemory()
+		if err != nil {
+			return err
+		}
+
+		h.TotalSize = int64(v.Total)
+		h.TotalUsable = int64(v.Available)
+		return nil
+	}
+
 	memory, err := ghw.Memory()
 	if err != nil {
 		fmt.Printf("Error getting memory info: %v", err)
@@ -254,7 +278,7 @@ func (h *host_device_payloads_information_data_memory_t) get() (err error) {
 	}
 
 	h.TotalSize = memory.TotalPhysicalBytes
-	h.TotalSize = memory.TotalUsableBytes
+	h.TotalUsable = memory.TotalUsableBytes
 
 	for i := range memory.Modules {
 		h.Devices = append(h.Devices, host_device_payloads_information_data_memory_single_block_t{

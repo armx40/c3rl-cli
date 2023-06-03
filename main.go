@@ -12,8 +12,8 @@ func main() {
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	a := host_device_payloads_information_data_cpu_t{}
-	a.get()
+	a := Host_device_payloads_information_data_t{}
+	a.Get()
 	log.Println(a)
 
 	err := crypto_init()
