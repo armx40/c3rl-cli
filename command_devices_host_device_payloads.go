@@ -412,10 +412,10 @@ func (h *Host_device_payloads_information_data_t) Get() (err error) {
 	/**/
 
 	/* pci */
-	err = h.PCI.get()
-	if err != nil {
-		return
-	}
+	// err = h.PCI.get()
+	// if err != nil {
+	// 	return
+	// }
 	/**/
 
 	/* device id */
