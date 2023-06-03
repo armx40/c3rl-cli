@@ -12,6 +12,10 @@ func main() {
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
+	a := host_device_payloads_information_data_cpu_t{}
+	a.get()
+	log.Println(a)
+
 	err := crypto_init()
 	if err != nil {
 		fmt.Println("failed initialize crypto")
