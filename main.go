@@ -2,15 +2,24 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 
 	"github.com/urfave/cli/v2"
 )
 
+var BuildType = ""
+
 func main() {
 
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	if BuildType == "production" {
+		log.SetOutput(ioutil.Discard)
+		log.SetFlags(0)
+		os.Setenv("GHW_DISABLE_WARNINGS", "1")
+	} else {
+		log.SetFlags(log.LstdFlags | log.Lshortfile)
+	}
 
 	err := crypto_init()
 	if err != nil {

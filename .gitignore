@@ -2,3 +2,4 @@ main
 c3rl-cli
 data3.csv
 data3.db
+./production/

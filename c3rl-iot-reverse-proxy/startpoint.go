@@ -170,6 +170,7 @@ func (e *startpoint_connection_t) open() (err error) {
 func (e *startpoint_connection_t) receive_connections() (err error) {
 
 	log.Printf("now listening on %s:%d for %s:%d\n", e.StartPointHost, e.StartPointPort, e.EndPointHost, e.EndPointPort)
+	fmt.Printf("now listening on %s:%d for %s:%d\n", e.StartPointHost, e.StartPointPort, e.EndPointHost, e.EndPointPort)
 
 	go func() {
 		for {
@@ -253,14 +254,18 @@ func (e *startpoint_t) init_config() (err error) {
 
 	jsonFile, err := os.Open(main_app_startpoint_config_file)
 	if err != nil {
+		fmt.Println("FATAL: cannot read config file")
 		log.Fatalln("cannot read config file")
+		return
 	}
 	jsonData, _ := ioutil.ReadAll(jsonFile)
 
 	err = json.Unmarshal([]byte(jsonData), &e.StartpointConfig)
 
 	if err != nil {
+		fmt.Println("FATAL: unable to read contents of config file")
 		log.Fatalln("unable to read contents of config file")
+		return
 	}
 
 	return
@@ -312,7 +317,7 @@ func (e *startpoint_t) init() (err error) {
 	if err != nil {
 		return
 	}
-
+	fmt.Println("startpoint started")
 	log.Println("startpoint inited")
 	return
 }
