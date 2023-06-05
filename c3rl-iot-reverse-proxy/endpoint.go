@@ -78,10 +78,12 @@ func (e *endpoint_connection_t) open() (err error) {
 	log.Printf("opening endpoint for host: %s and port %d with id: %s\n", e.EHost, e.EPort, e.ConnectionID)
 
 	print_text := color.New(color.FgWhite)
-	print_text.Printf("opening endpoint for host: %s and port ", e.EHost)
+	print_text.Printf("opening endpoint for host: %s", e.EHost)
 	print_text.Add(color.FgGreen)
-	print_text.Printf("%d with id: ", e.EPort)
+	print_text.Printf(":%d ", e.EPort)
 	print_text.Add(color.FgWhite)
+	print_text.Printf(" with id: ")
+	print_text.Add(color.FgBlue)
 	print_text.Printf("%s\n", e.ConnectionID)
 
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", e.EHost, e.EPort))
