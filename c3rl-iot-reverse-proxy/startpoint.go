@@ -178,9 +178,9 @@ func (e *startpoint_connection_t) receive_connections() (err error) {
 	print_text.Add(color.FgGreen)
 	print_text.Printf("%d", e.StartPointPort)
 	print_text.Add(color.FgWhite)
-	print_text.Printf(" -> %s", "endpoint")
+	print_text.Printf(" -> %s:", "endpoint")
 	print_text.Add(color.FgGreen)
-	print_text.Printf(":%d\n", e.EndPointPort)
+	print_text.Printf("%d\n", e.EndPointPort)
 
 	go func() {
 		for {
