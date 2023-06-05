@@ -8,6 +8,8 @@ import (
 	"time"
 
 	pb "main/c3rl-iot-reverse-proxy/protofiles"
+
+	"github.com/fatih/color"
 )
 
 const ENDPOINT_CONNECTION_TIMEOUT_SECONDS = 5 * 60 // 5 minutes
@@ -74,6 +76,13 @@ func (e *endpoint_connection_t) destroy() (err error) {
 func (e *endpoint_connection_t) open() (err error) {
 
 	log.Printf("opening endpoint for host: %s and port %d with id: %s\n", e.EHost, e.EPort, e.ConnectionID)
+
+	print_text := color.New(color.FgWhite)
+	print_text.Printf("opening endpoint for host: %s and port ", e.EHost)
+	print_text.Add(color.FgGreen)
+	print_text.Printf("%d with id: ", e.EPort)
+	print_text.Add(color.FgWhite)
+	print_text.Printf("%s\n", e.ConnectionID)
 
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", e.EHost, e.EPort))
 	if err != nil {
@@ -175,6 +184,7 @@ func (e *endpoint_t) init() (err error) {
 	e.EndpointConnections = make(map[endpoint_connection_id_t]*endpoint_connection_t)
 
 	log.Println("endpoint inited")
+	fmt.Println("endpoint started")
 	return
 }
 

@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/google/uuid"
 )
 
@@ -170,7 +171,16 @@ func (e *startpoint_connection_t) open() (err error) {
 func (e *startpoint_connection_t) receive_connections() (err error) {
 
 	log.Printf("now listening on %s:%d for %s:%d\n", e.StartPointHost, e.StartPointPort, e.EndPointHost, e.EndPointPort)
-	fmt.Printf("now listening on %s:%d for %s:%d\n", e.StartPointHost, e.StartPointPort, e.EndPointHost, e.EndPointPort)
+	log.Printf("now listening on %s:%d for %s:%d\n", e.StartPointHost, e.StartPointPort, e.EndPointHost, e.EndPointPort)
+
+	print_text := color.New(color.FgWhite)
+	print_text.Printf("%s:", e.StartPointHost)
+	print_text.Add(color.FgGreen)
+	print_text.Printf("%d", e.StartPointPort)
+	print_text.Add(color.FgWhite)
+	print_text.Printf(" -> %s", "endpoint")
+	print_text.Add(color.FgGreen)
+	print_text.Printf(":%d\n", e.EndPointPort)
 
 	go func() {
 		for {

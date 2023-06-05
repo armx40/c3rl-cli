@@ -43,8 +43,6 @@ func websocket_init() (err error) {
 				goto ROUTINE_END
 			}
 
-			fmt.Printf("endpoint connected\n")
-
 			err = websocket_receive_routine()
 			if err != nil {
 				goto ROUTINE_END
@@ -59,10 +57,10 @@ func websocket_init() (err error) {
 				return
 			}
 
-			fmt.Printf("endpoint disconnected will retry in 5 seconds\n")
+			fmt.Printf("disconnected will retry in 5 seconds\n")
 
 			log.Println(err)
-			log.Println("Will restart routine in 5 seconds")
+			log.Println("will restart routine in 5 seconds")
 			time.Sleep(WEBSOCKET_RECONNECT_WAIT_TIME * time.Second)
 
 		}

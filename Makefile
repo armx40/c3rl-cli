@@ -20,5 +20,5 @@ production:
 	GOARCH=arm GOOS=linux go build -ldflags="-s -w -X 'main.BuildType=production' -X 'main.command_version_time_unix=${CURRENT_TIME}' -X 'main.command_version_major=${VERSION_MAJOR}' -X 'main.command_version_minor=${VERSION_MINOR}' -X 'main.command_version_patch=${VERSION_PATCH}' -X 'main.command_version_build_number=${BUILD_NUMBER}'" -o ${PRODUCTION_BINARY_NAME}_linux_arm 
 
 	# update build number
-	sed -i "" "s/${BUILD_NUMBER}\$$/${NEW_BUILD_NUMBER}/g" production-build-number.txt 
-
+	# sed -i 	"s/${BUILD_NUMBER}\$$/${NEW_BUILD_NUMBER}/g" production-build-number.txt 
+	echo -n ${NEW_BUILD_NUMBER} >| production-build-number.txt 

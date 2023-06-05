@@ -21,17 +21,17 @@ func command_devices_subcommands() (commands cli.Commands) {
 	}, {
 		Name:        "settings",
 		Aliases:     []string{"s"},
-		Usage:       "manage connected device settings",
+		Usage:       "Manage connected device settings",
 		Subcommands: command_devices_subcommands_settings_subcommands(),
 	}, {
 		Name:        "data",
 		Aliases:     []string{"d"},
-		Usage:       "get connected device data",
+		Usage:       "Get connected device data",
 		Subcommands: command_devices_subcommands_data_subcommands(),
 	}, {
 		Name:        "host-device",
 		Aliases:     []string{"hd"},
-		Usage:       "manage/configure host device",
+		Usage:       "Manage/configure host device",
 		Subcommands: command_devices_subcommands_host_device_subcommands(),
 	}}
 

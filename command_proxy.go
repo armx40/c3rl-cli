@@ -16,7 +16,7 @@ func command_proxy_subcommands() (commands cli.Commands) {
 	commands = cli.Commands{{
 		Name:    "endpoint",
 		Aliases: []string{"e"},
-		Usage:   "configure this device as endpoint",
+		Usage:   "Use this device as an endpoint",
 		Action:  command_proxy_endpoint,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
@@ -31,7 +31,7 @@ func command_proxy_subcommands() (commands cli.Commands) {
 	}, {
 		Name:    "startpoint",
 		Aliases: []string{"s"},
-		Usage:   "use this device as startpoint and expose ports on both ends",
+		Usage:   "Use this device as a startpoint and expose ports through which to forward data",
 		Action:  command_proxy_startpoint,
 
 		Flags: []cli.Flag{
@@ -64,7 +64,7 @@ func command_proxy_subcommands() (commands cli.Commands) {
 		{
 			Name:    "install",
 			Aliases: []string{"i"},
-			Usage:   "install endpoint service/job",
+			Usage:   "Install endpoint service/job",
 			Action:  command_proxy_install_endpoint,
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -80,7 +80,7 @@ func command_proxy_subcommands() (commands cli.Commands) {
 		{
 			Name:    "uninstall",
 			Aliases: []string{"u"},
-			Usage:   "uninstall endpoint service/job",
+			Usage:   "Uninstall endpoint service/job",
 			Action:  command_proxy_uninstall_endpoint,
 		},
 	}

@@ -32,27 +32,38 @@ func main() {
 			{
 				Name:        "auth",
 				Aliases:     []string{"a"},
+				Usage:       "User authentication related functions",
 				Subcommands: command_auth_subcommands(),
 			},
 			{
 				Name:        "devices",
 				Aliases:     []string{"d"},
+				Usage:       "View and manage local and your c3rl devices",
 				Subcommands: command_devices_subcommands(),
 			},
 			{
 				Name:        "data",
 				Aliases:     []string{"dt"},
+				Usage:       "Process and view data",
 				Subcommands: command_data_subcommands(),
 			},
 			{
 				Name:    "version",
 				Aliases: []string{"v"},
+				Usage:   "Print version information",
 				Action:  command_version_action,
 			},
 			{
 				Name:        "proxy",
 				Aliases:     []string{"p"},
+				Usage:       "IoT proxy functions",
 				Subcommands: command_proxy_subcommands(),
+			},
+			{
+				Name:        "install",
+				Aliases:     []string{"i"},
+				Usage:       "Binary installation related functions",
+				Subcommands: command_install_subcommands(),
 			},
 		},
 		Name:  "c3rl-cli",

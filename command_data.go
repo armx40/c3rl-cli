@@ -11,7 +11,7 @@ func command_data_subcommands() (commands cli.Commands) {
 	commands = cli.Commands{{
 		Name:        "process",
 		Aliases:     []string{"p"},
-		Usage:       "process data from file",
+		Usage:       "Process data from file",
 		Subcommands: command_data_subcommands_process(),
 	},
 	}
