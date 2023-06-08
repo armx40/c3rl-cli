@@ -204,7 +204,7 @@ func command_proxy_install_endpoint(cCtx *cli.Context) (err error) {
 		return err
 	}
 
-	err = command_proxy_functions_linux_endpoint_install_routine(data.CLILocation, data.Credentials)
+	err = command_proxy_functions_endpoint_install_routine(data.CLILocation, data.Credentials)
 	if err != nil {
 		return
 	}
@@ -214,7 +214,7 @@ func command_proxy_install_endpoint(cCtx *cli.Context) (err error) {
 
 func command_proxy_uninstall_endpoint(cCtx *cli.Context) (err error) {
 
-	err = command_proxy_functions_linux_endpoint_uninstall_routine()
+	err = command_proxy_functions_endpoint_uninstall_routine()
 	if err != nil {
 		return
 	}
