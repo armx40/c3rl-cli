@@ -218,5 +218,6 @@ func command_proxy_uninstall_endpoint(cCtx *cli.Context) (err error) {
 	if err != nil {
 		return
 	}
+	fmt.Println("endpoint service uninstalled")
 	return
 }
