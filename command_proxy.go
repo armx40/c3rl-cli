@@ -2,8 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	pb "main/c3rl-iot-reverse-proxy"
+	"os"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/urfave/cli/v2"
 )
 
@@ -165,10 +168,55 @@ func command_proxy_startpoint(cCtx *cli.Context) (err error) {
 
 func command_proxy_install_endpoint(cCtx *cli.Context) (err error) {
 
+	current_user_home_dir, err := os.UserHomeDir()
+
+	if err != nil {
+		return
+	}
+
+	var qs = []*survey.Question{
+		{
+			Name: "CLILocation",
+			Prompt: &survey.Input{
+				Message: "c3rl-cli location:",
+				Default: "/usr/local/bin/c3rl-cli",
+			},
+		},
+		{
+			Name: "Credentials",
+			Prompt: &survey.Input{
+				Message: "credentials:",
+				Default: current_user_home_dir + "/.config/c3rl/credentials.json",
+			},
+		},
+	}
+
+	type answers struct {
+		CLILocation string
+		Credentials string
+	}
+
+	var data answers
+
+	err = survey.Ask(qs, &data)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	err = command_proxy_functions_linux_endpoint_install_routine(data.CLILocation, data.Credentials)
+	if err != nil {
+		return
+	}
+	fmt.Println("endpoint service installed")
 	return
 }
 
 func command_proxy_uninstall_endpoint(cCtx *cli.Context) (err error) {
 
+	err = command_proxy_functions_linux_endpoint_uninstall_routine()
+	if err != nil {
+		return
+	}
 	return
 }

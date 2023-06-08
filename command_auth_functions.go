@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/zalando/go-keyring"
 )
@@ -98,7 +97,7 @@ func command_auth_functions_echo() (err error) {
 func command_auth_functions_get_auth_data() (data userTokenPayload, err error) {
 	data_str, err := keyring.Get("c3rl-cli", "auth")
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	err = json.Unmarshal([]byte(data_str), &data)

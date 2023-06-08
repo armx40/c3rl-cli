@@ -68,7 +68,7 @@ func (e *endpoint_connection_t) destroy() (err error) {
 
 	delete(endpoint.EndpointConnections, e.ConnectionID)
 
-	log.Printf("destroyed endpoint connection for host: %s and port %d with conn id: %s, current count: %d\n", e.EHost, e.EPort, e.ConnectionID, (endpoint.EndpointConnections))
+	log.Printf("destroyed endpoint connection for host: %s and port %d with conn id: %s, current count: %d\n", e.EHost, e.EPort, e.ConnectionID, len(endpoint.EndpointConnections))
 
 	return
 }
