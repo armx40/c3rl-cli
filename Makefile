@@ -21,4 +21,4 @@ production:
 
 	# update build number
 	# sed -i 	"s/${BUILD_NUMBER}\$$/${NEW_BUILD_NUMBER}/g" production-build-number.txt 
-	echo -n ${NEW_BUILD_NUMBER} >| production-build-number.txt 
+	echo ${NEW_BUILD_NUMBER} > production-build-number.txt 
