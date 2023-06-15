@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
-	"github.com/zalando/go-keyring"
+	"gopkg.in/yaml.v3"
 )
 
 func command_auth_functions_login(username string, password string) (err error) {
@@ -44,12 +45,8 @@ func command_auth_functions_login(username string, password string) (err error) 
 		return err
 	}
 
-	/**/
-
-	/* store auth payload */
-	err = keyring.Set("c3rl-cli", "auth", string(marshaled_bytes))
+	err = command_auth_functions_set_auth_data(&token_data)
 	if err != nil {
-		err = fmt.Errorf("Failed to store auth token. Make sure you have access to system's keyring.")
 		return err
 	}
 	/**/
@@ -94,16 +91,88 @@ func command_auth_functions_echo() (err error) {
 	return nil
 }
 
-func command_auth_functions_get_auth_data() (data userTokenPayload, err error) {
-	data_str, err := keyring.Get("c3rl-cli", "auth")
+func command_auth_functions_set_auth_data(token_data *userTokenPayload) (err error) {
+
+	/* store auth payload */
+	// json_bytes, err := json.Marshal(token_data)
+	// if err != nil {
+	// 	err = fmt.Errorf("failed to get json data")
+	// 	return
+	// }
+	// err = keyring.Set("c3rl-cli", "auth", string(json_bytes))
+	// if err != nil {
+	// 	err = fmt.Errorf("Failed to store auth token. Make sure you have access to system's keyring.")
+	// 	return
+	// }
+	/**/
+
+	/* store in auth file in config */
+	yaml_data, err := yaml.Marshal(&token_data)
 	if err != nil {
+		err = fmt.Errorf("failed to decode auth data")
 		return
 	}
 
-	err = json.Unmarshal([]byte(data_str), &data)
+	user_home_dir, err := os.UserHomeDir()
 	if err != nil {
+		err = fmt.Errorf("failed to get user home directory")
 		return
 	}
+
+	/* check if .config/c3rl exist or not */
+	_, err = os.Stat(user_home_dir + "/.config/c3rl")
+	if os.IsNotExist(err) {
+		err = os.Mkdir(user_home_dir+"/.config/c3rl", os.ModePerm)
+		if err != nil {
+			return
+		}
+	} else if err == nil {
+
+	} else {
+		return err
+	}
+
+	err = os.WriteFile(user_home_dir+"/.config/c3rl/auth.yaml", yaml_data, 0644)
+	if err != nil {
+		err = fmt.Errorf("failed to store auth token")
+		return
+	}
+	/**/
+
+	return
+
+}
+func command_auth_functions_get_auth_data() (data userTokenPayload, err error) {
+
+	/* get from keyring */
+	// data_str, err := keyring.Get("c3rl-cli", "auth")
+	// if err != nil {
+	// 	return
+	// }
+
+	// err = json.Unmarshal([]byte(data_str), &data)
+	// if err != nil {
+	// 	return
+	// }
+	/* */
+
+	/* get from auth yaml */
+	user_dir, err := os.UserHomeDir()
+	if err != nil {
+		err = fmt.Errorf("failed to get user home directory")
+		return
+	}
+	auth_yaml_data, err := os.ReadFile(user_dir + "/.config/c3rl/auth.yaml")
+	if err != nil {
+		err = fmt.Errorf("failed to get auth token")
+		return
+	}
+	err = yaml.Unmarshal(auth_yaml_data, &data)
+	if err != nil {
+		err = fmt.Errorf("failed to decode auth yaml")
+		return
+	}
+	/**/
 	return
 }
 

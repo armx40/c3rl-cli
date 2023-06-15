@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"gopkg.in/yaml.v3"
 )
 
 func command_devices_host_device_functions_get_host_device_info() (data_out *Host_device_payloads_information_data_t, err error) {
@@ -145,7 +146,8 @@ func command_devices_host_device_functions_generate_credentials(register_data *h
 		return err
 	}
 
-	configuration_out_file := home_dirname + "/.config/c3rl/credentials.json"
+	// configuration_out_file := home_dirname + "/.config/c3rl/credentials.json"
+	configuration_out_file := home_dirname + "/.config/c3rl/credentials.yaml"
 
 	out_file := configuration_out_file
 
@@ -156,7 +158,12 @@ func command_devices_host_device_functions_generate_credentials(register_data *h
 
 	/* get register data bytes */
 
-	register_data_bytes, err := json.Marshal(register_data)
+	// register_data_bytes, err := json.Marshal(register_data)
+	// if err != nil {
+	// 	return
+	// }
+
+	register_data_bytes, err := yaml.Marshal(register_data)
 	if err != nil {
 		return
 	}

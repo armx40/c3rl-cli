@@ -9,10 +9,10 @@ import (
 )
 
 var (
-	command_version_major        = ""
-	command_version_minor        = ""
-	command_version_patch        = ""
-	command_version_build_number = ""
+	command_version_major        = "0"
+	command_version_minor        = "0"
+	command_version_patch        = "0"
+	command_version_build_number = "0"
 	command_version_time_unix    = "0"
 )
 

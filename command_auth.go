@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
 
@@ -63,14 +64,29 @@ func command_auth_login(cCtx *cli.Context) error {
 	return nil
 }
 
-func command_auth_verify(cCtx *cli.Context) error {
+func command_auth_verify(cCtx *cli.Context) (err error) {
 
-	err := command_auth_functions_echo()
+	err = command_auth_functions_echo()
 	if err != nil {
+		print_text := color.New(color.FgWhite)
+		print_text.Printf("Status: ")
+		print_text.Add(color.FgRed)
+		print_text.Printf("FAIL\n")
+
 		return fmt.Errorf("failed to verify auth status")
 	}
 
-	fmt.Printf("auth status verified\n")
+	/* get auth data */
+	// auth_data, err := command_auth_functions_get_auth_data()
+	// if err != nil {
+	// 	return
+	// }
+	/* */
+
+	print_text := color.New(color.FgWhite)
+	print_text.Printf("Status: ")
+	print_text.Add(color.FgGreen)
+	print_text.Printf("OK\n")
 
 	return nil
 }

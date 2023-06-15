@@ -44,6 +44,10 @@ func network_request(url string, params map[string]string, headers map[string]st
 	}
 	/* */
 
+	/* set api secret */
+	req.Header.Set("x-api-secret", "RhBNQ9yVrnRg9+HsMffaCU7blOI9ppCvoitkvWLivpo=")
+	/**/
+
 	/* prepare url */
 	q := req.URL.Query()
 	for i := range params {

@@ -12,9 +12,11 @@ require (
 	github.com/jaypipes/ghw v0.10.0
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/pion/dtls/v2 v2.2.7
+	github.com/shirou/gopsutil/v3 v3.23.5
 	github.com/urfave/cli/v2 v2.25.0
 	github.com/zalando/go-keyring v0.2.2
 	go.mongodb.org/mongo-driver v1.11.3
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -25,8 +27,8 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/jaypipes/pcidb v1.0.0 // indirect
+	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
@@ -39,7 +41,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/shirou/gopsutil/v3 v3.23.5 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/tklauser/go-sysconf v0.3.11 // indirect
 	github.com/tklauser/numcpus v0.6.0 // indirect

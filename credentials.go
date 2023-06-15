@@ -1,9 +1,10 @@
 package main
 
 import (
-	"encoding/json"
-	pb "main/c3rl-iot-reverse-proxy"
+	pb "main/c3rl-iot-reverse-roxy"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 func credentials_load_credentials(config_file string) (credentials *pb.Host_device_credentials_t, err error) {
@@ -14,7 +15,7 @@ func credentials_load_credentials(config_file string) (credentials *pb.Host_devi
 			err = err_
 			return
 		}
-		config_file = home_dirname + "/.config/c3rl/credentials.json"
+		config_file = home_dirname + "/.config/c3rl/credentials.yaml"
 	}
 
 	credentials_data, err := os.ReadFile(config_file)
@@ -24,7 +25,7 @@ func credentials_load_credentials(config_file string) (credentials *pb.Host_devi
 
 	credentials = &pb.Host_device_credentials_t{}
 
-	err = json.Unmarshal(credentials_data, &credentials)
+	err = yaml.Unmarshal(credentials_data, &credentials)
 
 	return
 }
