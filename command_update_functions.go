@@ -135,6 +135,13 @@ func command_update_functions_check_if_update_is_required() (update_required boo
 }
 func command_update_functions_generate_update_script(version cli_version_t, update_location string) (script_file_data string, err error) {
 
+	current_version, err := command_update_functions_get_current_version()
+	if err != nil {
+		return
+	}
+
+	current_version_string := fmt.Sprintf("%d.%d.%d", current_version.Major, current_version.Minor, current_version.Patch)
+
 	version_string := fmt.Sprintf("%d.%d.%d", version.Major, version.Minor, version.Patch)
 
 	current_os := "linux"
@@ -153,12 +160,12 @@ func command_update_functions_generate_update_script(version cli_version_t, upda
 
 	cli_filename := fmt.Sprintf(`c3rl-cli_%s_%s_%s`, version_string, current_os, current_arch)
 
-	script_file_data = fmt.Sprintf(`sudo mv %s %s.old
+	script_file_data = fmt.Sprintf(`sudo mv %s %s.%s
 wget https://github.com/c3rl/c3rl-cli-releases/releases/download/%s/%s.tar -P /tmp
 tar -xzf /tmp/%s.tar -C /tmp/
 chmod +x /tmp/%s
 sudo mv /tmp/%s %s
-`, update_location, update_location, version_string, cli_filename, cli_filename, cli_filename, cli_filename, update_location)
+`, update_location, update_location, current_version_string, version_string, cli_filename, cli_filename, cli_filename, cli_filename, update_location)
 
 	return
 }
