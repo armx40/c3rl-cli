@@ -190,18 +190,10 @@ func (e *endpoint_t) init() (err error) {
 	return
 }
 
-func (e *endpoint_t) handle_websocket(message *[]byte) (err error) {
-
-	/* decapsulate packet and process */
-	packet, err := packet_decapsulate(message)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	/**/
+func (e *endpoint_t) handle_websocket(packet *pb.WebSocketPacketPayload, message *[]byte) (err error) {
 
 	/* check connection id and perform */
-	err = e.process_packet(&packet)
+	err = e.process_packet(packet)
 	/**/
 
 	return

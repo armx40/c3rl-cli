@@ -20,3 +20,9 @@ type expose_response_payload_t struct {
 	ExposedPorts       map[uint16]uint16
 	ExposedDomainPorts map[uint16]string
 }
+
+type request_response_request_packet_t struct {
+	GType    string      `json:"g"`
+	Data     interface{} `json:"d"`
+	Sequence uint32      `json:"s"`
+}

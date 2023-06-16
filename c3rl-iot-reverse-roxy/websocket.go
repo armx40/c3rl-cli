@@ -29,8 +29,10 @@ const (
 )
 
 const (
-	WEBSOCKET_PACKET_TYPE_REQUEST_RESPONSE = 1
-	WEBSOCKET_PACKET_TYPE_PROXY            = 2
+	WEBSOCKET_PACKET_TYPE_REQUEST_RESPONSE          = 1
+	WEBSOCKET_PACKET_TYPE_PROXY                     = 2
+	WEBSOCKET_PACKET_TYPE_REQUEST_RESPONSE_REQUEST  = 3
+	WEBSOCKET_PACKET_TYPE_REQUEST_RESPONSE_RESPONSE = 4
 )
 
 func websocket_init() (err error) {
@@ -63,6 +65,13 @@ func websocket_init() (err error) {
 			if main_app_direction == "startpoint" {
 				fmt.Printf("cannot establish start point connection\n")
 				err = fmt.Errorf("cannot establish start point connection")
+				os.Exit(1)
+				return
+			}
+
+			if main_app_direction == "endpoint" && main_app_endpoint_exposed_data.ExposedEnable {
+				fmt.Printf("cannot establish expose connection\n")
+				err = fmt.Errorf("cannot establish expose connection")
 				os.Exit(1)
 				return
 			}
@@ -263,17 +272,44 @@ func websocket_verify_auth() (err error) {
 
 func websocket_receive_routine() (err error) {
 	for {
-
 		_, message, err := websocket_conn.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
 			return err
 		}
 
+		/* decapsulate packet and process */
+		packet, err := packet_decapsulate(&message)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		/**/
+
+		/* check if packet is for some api functions */
+
+		if packet.PacketType == WEBSOCKET_PACKET_TYPE_REQUEST_RESPONSE_REQUEST {
+			err = request_response_handle_request_packet(&packet)
+			if err != nil {
+				log.Println(err)
+			}
+			continue
+		}
+
+		if packet.PacketType == WEBSOCKET_PACKET_TYPE_REQUEST_RESPONSE_RESPONSE {
+			// err = request_response_handle_request_packet(&packet)
+			// if err != nil {
+			// 	log.Println(err)
+			// }
+			continue
+		}
+
+		/* proceed to proxy functions */
+
 		if main_app_direction == "endpoint" {
-			err = endpoint.handle_websocket(&message)
+			err = endpoint.handle_websocket(&packet, &message)
 		} else if main_app_direction == "startpoint" {
-			err = startpoint.handle_websocket(&message)
+			err = startpoint.handle_websocket(&packet, &message)
 		} else {
 			err = fmt.Errorf("invalid app direction")
 			return err

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	pb "main/c3rl-iot-reverse-roxy/protofiles"
 	"net"
 	"os"
 	"time"
@@ -331,14 +332,7 @@ func (e *startpoint_t) init() (err error) {
 	return
 }
 
-func (e *startpoint_t) handle_websocket(message *[]byte) (err error) {
-
-	/* decapsulate packet and process */
-	packet, err := packet_decapsulate(message)
-	if err != nil {
-		return
-	}
-	/**/
+func (e *startpoint_t) handle_websocket(packet *pb.WebSocketPacketPayload, message *[]byte) (err error) {
 
 	/* get connection id */
 	var conn_id startpoint_connection_id_t
