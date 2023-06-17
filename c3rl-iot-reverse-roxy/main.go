@@ -34,8 +34,9 @@ var main_app_auth_data *Proxy_auth_data_t
 var main_app_credentials *Host_device_credentials_t
 var main_app_machine_data []byte
 var main_app_endpoint_exposed_data *Exposed_data_t
+var main_app_is_production bool
 
-func StartApp(direction string, config_file string, endpoint_uid string, credentials *Host_device_credentials_t, auth_data *Proxy_auth_data_t, machine_data []byte, exposed_data *Exposed_data_t) (err error) {
+func StartApp(direction string, config_file string, endpoint_uid string, credentials *Host_device_credentials_t, auth_data *Proxy_auth_data_t, machine_data []byte, exposed_data *Exposed_data_t, is_production bool) (err error) {
 
 	/* check if proxy program is already running */
 
@@ -55,6 +56,13 @@ func StartApp(direction string, config_file string, endpoint_uid string, credent
 	main_app_credentials = credentials
 	main_app_machine_data = machine_data
 	main_app_endpoint_exposed_data = exposed_data
+	main_app_is_production = is_production
+
+	if main_app_is_production {
+		websocket_endpoint = "wss://roxy.c3rl.com/api/roxy/w"
+	} else {
+		websocket_endpoint = "ws://localhost:1797/api/proxy/w"
+	}
 
 	if direction == "startpoint" {
 		main_app_startpoint_uid = credentials.UID

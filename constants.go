@@ -22,6 +22,7 @@ const (
 	DATA_LOG_TIME_IS_32_BITS              = 1 << 18
 )
 
-// const API_HOST = "http://127.0.0.1:9000/api/c3rl-cli/"
+var API_HOST = ""
 
-const API_HOST = "https://es.c3rl.com/api/c3rl-cli/"
+// const API_HOST = "http://127.0.0.1:9000/api/c3rl-cli/"
+// const API_HOST = "https://es.c3rl.com/api/c3rl-cli/"

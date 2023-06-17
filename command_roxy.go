@@ -170,7 +170,7 @@ func command_roxy_endpoint(cCtx *cli.Context) (err error) {
 		ExposedEnable: false,
 	}
 
-	return pb.StartApp("endpoint", "", "", credentials, &auth_data_roxy, machine_data_bytes, &exposed_data)
+	return pb.StartApp("endpoint", "", "", credentials, &auth_data_roxy, machine_data_bytes, &exposed_data, BuildType == "production")
 }
 
 func command_roxy_startpoint(cCtx *cli.Context) (err error) {
@@ -211,7 +211,7 @@ func command_roxy_startpoint(cCtx *cli.Context) (err error) {
 		ExposedEnable: false,
 	}
 
-	return pb.StartApp("startpoint", command_roxy_startpoint_config_file, command_roxy_startpoint_endpoint_uid, credentials, &auth_data_roxy, machine_data_bytes, &exposed_data)
+	return pb.StartApp("startpoint", command_roxy_startpoint_config_file, command_roxy_startpoint_endpoint_uid, credentials, &auth_data_roxy, machine_data_bytes, &exposed_data, BuildType == "production")
 }
 
 func command_roxy_expose(cCtx *cli.Context) (err error) {
@@ -259,7 +259,7 @@ func command_roxy_expose(cCtx *cli.Context) (err error) {
 		ExposedEnable: true,
 	}
 
-	return pb.StartApp("endpoint", "", "", credentials, &auth_data_roxy, machine_data_bytes, &exposed_data)
+	return pb.StartApp("endpoint", "", "", credentials, &auth_data_roxy, machine_data_bytes, &exposed_data, BuildType == "production")
 }
 
 func command_roxy_install_endpoint(cCtx *cli.Context) (err error) {

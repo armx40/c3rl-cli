@@ -17,7 +17,9 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 		log.SetFlags(0)
 		os.Setenv("GHW_DISABLE_WARNINGS", "1")
+		API_HOST = "https://es.c3rl.com/api/c3rl-cli/"
 	} else {
+		API_HOST = "http://127.0.0.1:9000/api/c3rl-cli/"
 		log.SetFlags(log.LstdFlags | log.Lshortfile)
 	}
 

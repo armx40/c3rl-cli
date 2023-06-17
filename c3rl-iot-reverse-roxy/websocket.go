@@ -14,13 +14,16 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const WEBSOCKET_RECONNECT_WAIT_TIME = 5
+const WEBSOCKET_RECONNECT_WAIT_TIME = 10
+const WEBSOCKET_RECONNECT_RETRIES = 10
 
 var websocket_conn *websocket.Conn
 
+var websocket_endpoint = ""
+
 // const websocket_endpoint = "ws://localhost:1797/api/proxy/w"
 
-const websocket_endpoint = "wss://roxy.c3rl.com/api/roxy/w"
+// const websocket_endpoint = "wss://roxy.c3rl.com/api/roxy/w"
 
 const (
 	WEBSOCKET_CONNECTION_TYPE_ENDPOINT   = 0
@@ -37,6 +40,8 @@ const (
 
 func websocket_init() (err error) {
 
+	websocket_retries := WEBSOCKET_RECONNECT_RETRIES
+
 	go func() {
 		for {
 			log.Println("websocket initing")
@@ -52,8 +57,11 @@ func websocket_init() (err error) {
 
 			err = websocket_verify_auth()
 			if err != nil {
+				log.Println(err)
 				goto ROUTINE_END
 			}
+
+			websocket_retries = 5
 
 			err = websocket_receive_routine()
 			if err != nil {
@@ -61,6 +69,8 @@ func websocket_init() (err error) {
 			}
 
 		ROUTINE_END:
+
+			log.Println(websocket_retries)
 
 			if main_app_direction == "startpoint" {
 				fmt.Printf("cannot establish start point connection\n")
@@ -76,10 +86,18 @@ func websocket_init() (err error) {
 				return
 			}
 
-			fmt.Printf("disconnected will retry in 5 seconds\n")
+			websocket_retries = websocket_retries - 1
+			if websocket_retries == 0 {
+				print_text := color.New(color.FgRed)
+				print_text.Println("retries exhausted. Exiting...")
+				os.Exit(1)
+			}
+
+			print_text := color.New(color.FgYellow)
+			print_text.Printf("retrying in %d seconds\n", WEBSOCKET_RECONNECT_WAIT_TIME)
 
 			log.Println(err)
-			log.Println("will restart routine in 5 seconds")
+			log.Printf("will restart routine in %d seconds\n", WEBSOCKET_RECONNECT_WAIT_TIME)
 			time.Sleep(WEBSOCKET_RECONNECT_WAIT_TIME * time.Second)
 
 		}
@@ -171,35 +189,58 @@ func websocket_verify_auth() (err error) {
 		if main_app_endpoint_exposed_data != nil {
 			if main_app_endpoint_exposed_data.ExposedEnable {
 
-				var response expose_response_payload_t
+				var response_g general_payload_v2_t
 
-				err = json.Unmarshal(message, &response)
+				err = json.Unmarshal(message, &response_g)
 				if err != nil {
 					return
 				}
 
-				for i := range response.ExposedPorts {
+				if response_g.Code == APIv2CODEOK {
+
+					interm_bytes, errd := json.Marshal(response_g.Payload)
+					if err != nil {
+						err = errd
+						return
+					}
+
+					var response expose_response_payload_t
+
+					err = json.Unmarshal(interm_bytes, &response)
+					if err != nil {
+						return
+					}
+
+					for i := range response.ExposedPorts {
+						print_text := color.New(color.FgWhite)
+						print_text.Printf("%s:", "tcp.exp.c3rl.com")
+						print_text.Add(color.FgGreen)
+						print_text.Printf("%d", response.ExposedPorts[i])
+						print_text.Add(color.FgWhite)
+						print_text.Printf(" -> %s:", "127.0.0.1")
+						print_text.Add(color.FgGreen)
+						print_text.Printf("%d\n", i)
+
+						log.Printf("exposed port: %d on remote port: %d\n", i, response.ExposedPorts[i])
+					}
+
+					for i := range response.ExposedDomainPorts {
+						print_text := color.New(color.FgGreen)
+						print_text.Printf("https://%s", response.ExposedDomainPorts[i])
+						print_text.Add(color.FgWhite)
+						print_text.Printf(" -> %s:", "127.0.0.1")
+						print_text.Add(color.FgGreen)
+						print_text.Printf("%d\n", i)
+
+						log.Printf("exposed port: %d on remote port: %d\n", i, response.ExposedPorts[i])
+					}
+				} else {
 					print_text := color.New(color.FgWhite)
-					print_text.Printf("%s:", "tcp.exp.c3rl.com")
-					print_text.Add(color.FgGreen)
-					print_text.Printf("%d", response.ExposedPorts[i])
-					print_text.Add(color.FgWhite)
-					print_text.Printf(" -> %s:", "127.0.0.1")
-					print_text.Add(color.FgGreen)
-					print_text.Printf("%d\n", i)
-
-					log.Printf("exposed port: %d on remote port: %d\n", i, response.ExposedPorts[i])
-				}
-
-				for i := range response.ExposedDomainPorts {
-					print_text := color.New(color.FgGreen)
-					print_text.Printf("https://%s", response.ExposedDomainPorts[i])
-					print_text.Add(color.FgWhite)
-					print_text.Printf(" -> %s:", "127.0.0.1")
-					print_text.Add(color.FgGreen)
-					print_text.Printf("%d\n", i)
-
-					log.Printf("exposed port: %d on remote port: %d\n", i, response.ExposedPorts[i])
+					print_text.Printf("%s: ", "endpoint")
+					print_text.Add(color.FgRed)
+					print_text.Printf("%s\n", response_g.Status)
+					print_text.Printf("%s\n", response_g.Payload)
+					return fmt.Errorf(response_g.Payload.(string))
 				}
 			} else {
 				var response general_payload_v2_t
@@ -220,6 +261,8 @@ func websocket_verify_auth() (err error) {
 					print_text.Printf("%s: ", "endpoint")
 					print_text.Add(color.FgRed)
 					print_text.Printf("%s\n", response.Status)
+					print_text.Printf("%s\n", response.Payload)
+					return fmt.Errorf(response.Payload.(string))
 				}
 			}
 		} else {
@@ -235,12 +278,13 @@ func websocket_verify_auth() (err error) {
 				print_text.Printf("%s:", "endpoint: ")
 				print_text.Add(color.FgGreen)
 				print_text.Printf("%s", response.Status)
-
 			} else {
 				print_text := color.New(color.FgWhite)
 				print_text.Printf("%s: ", "endpoint")
 				print_text.Add(color.FgRed)
 				print_text.Printf("%s\n", response.Status)
+				print_text.Printf("%s\n", response.Payload)
+				return fmt.Errorf(response.Payload.(string))
 			}
 		}
 	}
@@ -264,6 +308,7 @@ func websocket_verify_auth() (err error) {
 			print_text.Printf("%s: ", "startpoint")
 			print_text.Add(color.FgRed)
 			print_text.Printf("%s\n", response.Status)
+			print_text.Printf("%s\n", response.Payload)
 		}
 	}
 
