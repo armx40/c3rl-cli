@@ -161,11 +161,11 @@ func command_update_functions_generate_update_script(version cli_version_t, upda
 	cli_filename := fmt.Sprintf(`c3rl-cli_%s_%s_%s`, version_string, current_os, current_arch)
 
 	script_file_data = fmt.Sprintf(`sudo mv %s %s.%s
-wget https://github.com/c3rl/c3rl-cli-releases/releases/download/%s/%s.tar -P /tmp
+curl -L -o /tmp/%s.tar https://github.com/c3rl/c3rl-cli-releases/releases/download/%s/%s.tar
 tar -xzf /tmp/%s.tar -C /tmp/
 chmod +x /tmp/%s
 sudo mv /tmp/%s %s
-`, update_location, update_location, current_version_string, version_string, cli_filename, cli_filename, cli_filename, cli_filename, update_location)
+`, update_location, update_location, current_version_string, cli_filename, version_string, cli_filename, cli_filename, cli_filename, cli_filename, update_location)
 
 	return
 }
