@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
 
@@ -16,20 +17,20 @@ func command_devices_subcommands_host_device_subcommands() (commands cli.Command
 		{
 			Name:    "add",
 			Aliases: []string{"a"},
-			Usage:   "add this host device to your account",
+			Usage:   "Add this host device to your account",
 			Action:  command_devices_subcommands_host_device_subcommands_add,
 		},
 		{
 			Name:    "remove",
 			Aliases: []string{"r"},
-			Usage:   "remove this device from your account",
+			Usage:   "Remove this device from your account",
 			Action:  command_devices_subcommands_host_device_subcommands_remove,
 		},
 		{
-			Name:    "credentials",
-			Aliases: []string{"c"},
-			Usage:   "generate credentials for this device",
-			Action:  command_devices_subcommands_host_device_subcommands_generate_credentials,
+			Name:    "info",
+			Aliases: []string{"i"},
+			Usage:   "Print the host device credentials information",
+			Action:  command_devices_subcommands_host_device_subcommands_info,
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:        "out",
@@ -78,7 +79,13 @@ func command_devices_subcommands_host_device_subcommands_add(cCtx *cli.Context) 
 		return err
 	}
 
-	err = command_devices_host_device_functions_add_device(data.Name, data.Description)
+	reg_data, err := command_devices_host_device_functions_add_device(data.Name, data.Description)
+
+	print_text := color.New(color.FgWhite)
+	print_text.Printf("Device registered with UID: ")
+	print_text.Add(color.FgGreen)
+	print_text.Printf("%s\n", reg_data.UID)
+
 	return err
 }
 
@@ -109,8 +116,13 @@ func command_devices_subcommands_host_device_subcommands_remove(cCtx *cli.Contex
 	return err
 }
 
-func command_devices_subcommands_host_device_subcommands_generate_credentials(cCtx *cli.Context) error {
+func command_devices_subcommands_host_device_subcommands_info(cCtx *cli.Context) error {
 
-	err := command_devices_host_device_functions_generate_credentials(nil, command_devices_subcommands_host_device_subcommands_generate_credentials_output_to_stdout)
+	credentials_data, err := command_devices_host_device_functions_read_credentials()
+
+	print_text := color.New(color.FgWhite)
+	print_text.Printf("Device UID: ")
+	print_text.Add(color.FgGreen)
+	print_text.Printf("%s\n", credentials_data.UID)
 	return err
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/urfave/cli/v2"
 )
@@ -39,14 +38,9 @@ func command_devices_subcommands() (commands cli.Commands) {
 }
 
 func command_devices_list(cCtx *cli.Context) error {
-	devices, err := command_devices_functions_find_sdcard_device()
+	_, err := command_devices_functions_find_c3rl_device(true)
 	if err != nil {
 		return err
-	}
-
-	for _, device := range devices {
-		devices = append(devices, device)
-		fmt.Printf("  %v\n", device)
 	}
 
 	return nil

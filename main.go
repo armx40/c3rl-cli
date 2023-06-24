@@ -29,6 +29,33 @@ func main() {
 		return
 	}
 
+	/* check for run file */
+	// err = runtime_check_run_file("")
+	// if err != nil {
+	// 	// fmt.Println("failed to check for run file")
+	// 	return
+	// }
+	/**/
+
+	/* generate run file  */
+	// err = runtime_generate_run_file("")
+	// if err != nil {
+	// 	fmt.Println("failed generate run file")
+	// 	return
+	// }
+	/**/
+
+	// defer func() {
+
+	// 	/* purge run file  */
+	// 	err = runtime_purge_run_file("")
+	// 	if err != nil {
+	// 		fmt.Println("failed remove run file")
+	// 		return
+	// 	}
+	// 	/**/
+	// }()
+
 	app := &cli.App{
 		Commands: []*cli.Command{
 			{

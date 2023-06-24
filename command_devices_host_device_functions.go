@@ -19,7 +19,7 @@ func command_devices_host_device_functions_get_host_device_info() (data_out *Hos
 	return
 }
 
-func command_devices_host_device_functions_add_device(name string, description string) (err error) {
+func command_devices_host_device_functions_add_device(name string, description string) (registeration_data host_device_credentials_t, err error) {
 
 	/* get auth data */
 	auth_data, err := command_auth_functions_get_auth_data()
@@ -49,12 +49,12 @@ func command_devices_host_device_functions_add_device(name string, description s
 	resp, err := network_request(API_HOST+"devices?g=ahd", nil, headers, request_data)
 
 	if err != nil {
-		return err
+		return
 	}
 
 	err = json.Unmarshal(resp, &response)
 	if err != nil {
-		return err
+		return
 	}
 	/**/
 
@@ -105,6 +105,8 @@ func command_devices_host_device_functions_add_device(name string, description s
 		UserID:   user_id,
 	}
 
+	registeration_data = reg_data
+
 	err = command_devices_host_device_functions_generate_credentials(&reg_data, false)
 	if err != nil {
 		fmt.Printf("device registered but failed to write credentials file. You can still save the credentials using ")
@@ -120,6 +122,43 @@ func command_devices_host_device_functions_remove_device() (err error) {
 func command_devices_host_device_functions_get_credentials_from_server() (err error) {
 
 	return
+}
+
+func command_devices_host_device_functions_read_credentials() (register_data *host_device_credentials_t, err error) {
+
+	register_data = &host_device_credentials_t{}
+
+	home_dirname, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+
+	/* check if .config/c3rl exist or not */
+	_, err = os.Stat(home_dirname + "/.config/c3rl")
+	if os.IsNotExist(err) {
+		err = os.Mkdir(home_dirname+"/.config/c3rl", os.ModePerm)
+		if err != nil {
+			return
+		}
+	} else if err == nil {
+
+	} else {
+		return
+	}
+
+	credentials_file := home_dirname + "/.config/c3rl/credentials.yaml"
+
+	credential_data_bytes, err := os.ReadFile(credentials_file)
+	if err != nil {
+		return
+	}
+
+	err = yaml.Unmarshal(credential_data_bytes, register_data)
+	if err != nil {
+		return
+	}
+	return
+
 }
 
 func command_devices_host_device_functions_generate_credentials(register_data *host_device_credentials_t, print_to_stdout bool) (err error) {
@@ -146,7 +185,6 @@ func command_devices_host_device_functions_generate_credentials(register_data *h
 		return err
 	}
 
-	// configuration_out_file := home_dirname + "/.config/c3rl/credentials.json"
 	configuration_out_file := home_dirname + "/.config/c3rl/credentials.yaml"
 
 	out_file := configuration_out_file
@@ -157,11 +195,6 @@ func command_devices_host_device_functions_generate_credentials(register_data *h
 	}
 
 	/* get register data bytes */
-
-	// register_data_bytes, err := json.Marshal(register_data)
-	// if err != nil {
-	// 	return
-	// }
 
 	register_data_bytes, err := yaml.Marshal(register_data)
 	if err != nil {

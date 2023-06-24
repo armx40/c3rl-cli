@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	// "github.com/google/gousb"
 	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/block"
 )
@@ -24,38 +25,80 @@ var sqlite3_db_statement *sql.Stmt
 var sqlite3_db_tx *sql.Tx
 
 var command_devices_functions_device_symmetric_key []byte
+var command_devices_functions_valid_products = []string{"ATNode-R"}
 
-// func command_devices_functions_find_c3rl_device() {
-// 	ctx := gousb.NewContext()
-// 	defer ctx.Close()
+func command_devices_functions_find_c3rl_device(print_out bool) (devices []interface{}, err error) {
 
-// 	// Debugging can be turned on; this shows some of the inner workings of the libusb package.
-// 	ctx.Debug(*debug)
+	/* check if user has permissions */
 
-// 	devs, err := ctx.OpenDevices(func(desc *gousb.DeviceDesc) bool {
-// 		// The usbid package can be used to print out human readable information.
+	// err = helper_function_is_user_dialout()
+	// if err != nil {
+	// 	print_text := color.New(color.FgRed)
+	// 	print_text.Println("User doesn't have permissions to access USB devices.")
+	// 	err = nil
+	// 	return
+	// }
+	// /**/
 
-// 		fmt.Printf("%03d.%03d %s:%s %s\n", desc.Bus, desc.Address, desc.Vendor, desc.Product, usbid.Describe(desc))
-// 		fmt.Printf("  Protocol: %s\n", usbid.Classify(desc))
+	// ctx := gousb.NewContext()
+	// defer ctx.Close()
 
-// 		return false
-// 	})
+	// // Debugging can be turned on; this shows some of the inner workings of the libusb package.
+	// ctx.Debug(*debug)
 
-// 	defer func() {
-// 		for _, d := range devs {
-// 			d.Close()
-// 		}
-// 	}()
+	// devs, err := ctx.OpenDevices(func(desc *gousb.DeviceDesc) bool {
+	// 	if desc.Vendor == 0 && desc.Product == 1 {
+	// 		return true
+	// 	}
+	// 	return false
+	// })
 
-// 	if err != nil {
-// 		log.Fatalf("list: %s", err)
-// 	}
+	// defer func() {
+	// 	for _, d := range devs {
+	// 		d.Close()
+	// 	}
+	// }()
 
-// 	for _, dev := range devs {
+	// if err != nil {
+	// 	return
+	// }
 
-// 		_ = dev
-// 	}
-// }
+	// for _, dev := range devs {
+	// 	manu, errd := dev.Manufacturer()
+	// 	if errd != nil {
+	// 		err = errd
+	// 		return
+	// 	}
+
+	// 	prod, errd := dev.Product()
+	// 	if errd != nil {
+	// 		err = errd
+	// 		return
+	// 	}
+
+	// 	serial, errd := dev.SerialNumber()
+	// 	if errd != nil {
+	// 		err = errd
+	// 		return
+	// 	}
+
+	// 	if manu == "c3rl opc pvt ltd" {
+	// 		/* check product */
+	// 		if slices.Contains(command_devices_functions_valid_products, prod) {
+	// 			/* check serial */
+	// 			devices = append(devices, dev)
+	// 			if print_out {
+	// 				fmt.Printf("%s [%s]\n", prod, serial)
+	// 			}
+
+	// 		}
+
+	// 	}
+
+	// }
+
+	return
+}
 
 func command_devices_functions_find_sdcard_device() (devices []*block.Partition, err error) {
 	block, err := ghw.Block()

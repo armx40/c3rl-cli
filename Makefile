@@ -9,7 +9,7 @@ PRODUCTION_BINARY_NAME_PREFIX=c3rl-cli_${VERSION_MAJOR}.${VERSION_MINOR}.${VERSI
 
 .PHONY: production
 production:
-	rm -r ./production/*
+	rm -rf ./production/*
 
 	GOARCH=amd64 GOOS=darwin go build -ldflags="-s -w -X 'main.BuildType=production' -X 'main.command_version_time_unix=${CURRENT_TIME}' -X 'main.command_version_major=${VERSION_MAJOR}' -X 'main.command_version_minor=${VERSION_MINOR}' -X 'main.command_version_patch=${VERSION_PATCH}' -X 'main.command_version_build_number=${BUILD_NUMBER}'" -o ${PRODUCTION_DIRECTORY}${PRODUCTION_BINARY_NAME_PREFIX}_darwin_amd64
 
@@ -57,3 +57,12 @@ production-notar:
 	# update build number
 	# sed -i 	"s/${BUILD_NUMBER}\$$/${NEW_BUILD_NUMBER}/g" production-build-number.txt 
 	echo ${NEW_BUILD_NUMBER} > production-build-number.txt 
+
+
+production-test-linux:
+	
+	GOARCH=amd64 GOOS=linux CGO_ENABLED=1 go build -buildvcs=false -ldflags="-s -w -X 'main.BuildType=production' -X 'main.command_version_time_unix=${CURRENT_TIME}' -X 'main.command_version_major=${VERSION_MAJOR}' -X 'main.command_version_minor=${VERSION_MINOR}' -X 'main.command_version_patch=${VERSION_PATCH}' -X 'main.command_version_build_number=${BUILD_NUMBER}'" -o main
+
+	GOARCH=arm64 GOOS=linux CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc go build -buildvcs=false -ldflags="-s -w -X 'main.BuildType=production' -X 'main.command_version_time_unix=${CURRENT_TIME}' -X 'main.command_version_major=${VERSION_MAJOR}' -X 'main.command_version_minor=${VERSION_MINOR}' -X 'main.command_version_patch=${VERSION_PATCH}' -X 'main.command_version_build_number=${BUILD_NUMBER}'" -o main_arm64
+
+	GOARCH=arm GOOS=linux CGO_ENABLED=1 CC=arm-linux-gnueabi-gcc go build -buildvcs=false -ldflags="-s -w -X 'main.BuildType=production' -X 'main.command_version_time_unix=${CURRENT_TIME}' -X 'main.command_version_major=${VERSION_MAJOR}' -X 'main.command_version_minor=${VERSION_MINOR}' -X 'main.command_version_patch=${VERSION_PATCH}' -X 'main.command_version_build_number=${BUILD_NUMBER}'" -o main_arm

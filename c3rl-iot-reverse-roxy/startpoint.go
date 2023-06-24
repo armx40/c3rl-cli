@@ -2,7 +2,6 @@ package c3rliotroxy
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	pb "main/c3rl-iot-reverse-roxy/protofiles"
 	"net"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/google/uuid"
-	"gopkg.in/yaml.v2"
 )
 
 const STARTPOINT_REMOTE_CONNECTION_BUFFER_SIZE = 32 * 1024
@@ -36,6 +34,7 @@ type startpoint_config_host_port_t struct {
 
 type startpoint_config_t struct {
 	HostPorts []startpoint_config_host_port_t `yaml:"hostPorts"`
+	UID       string                          `yaml:"uid"`
 }
 
 /************************************************************************/
@@ -259,24 +258,25 @@ func (e *startpoint_t) add_connection(settings *startpoint_config_host_port_t) (
 }
 
 func (e *startpoint_t) init_config() (err error) {
-	e.StartpointConfig = startpoint_config_t{}
-	/* read config file */
+	// e.StartpointConfig = startpoint_config_t{}
+	// /* read config file */
 
-	yamlFile, err := os.Open(main_app_startpoint_config_file)
-	if err != nil {
-		fmt.Println("FATAL: cannot read config file")
-		log.Fatalln("cannot read config file")
-		return
-	}
-	yamlData, _ := ioutil.ReadAll(yamlFile)
+	// yamlFile, err := os.Open(main_app_startpoint_config_file)
+	// if err != nil {
+	// 	fmt.Println("FATAL: cannot read config file")
+	// 	log.Fatalln("cannot read config file")
+	// 	return
+	// }
+	// yamlData, _ := ioutil.ReadAll(yamlFile)
 
-	err = yaml.Unmarshal([]byte(yamlData), &e.StartpointConfig)
+	// err = yaml.Unmarshal([]byte(yamlData), &e.StartpointConfig)
 
-	if err != nil {
-		fmt.Println("FATAL: unable to read contents of config file")
-		log.Fatalln("unable to read contents of config file")
-		return
-	}
+	// if err != nil {
+	// 	fmt.Println("FATAL: unable to read contents of config file")
+	// 	log.Fatalln("unable to read contents of config file")
+	// 	return
+	// }
+	e.StartpointConfig = main_app_startpoint_config
 
 	return
 }
@@ -327,8 +327,14 @@ func (e *startpoint_t) init() (err error) {
 	if err != nil {
 		return
 	}
-	fmt.Println("startpoint started")
+
+	print_text := color.New(color.FgWhite)
+	print_text.Printf("Connected to: ")
+	print_text.Add(color.FgGreen)
+	print_text.Printf("%s\n", e.StartpointConfig.UID)
+
 	log.Println("startpoint inited")
+
 	return
 }
 

@@ -63,7 +63,7 @@ func command_roxy_subcommands() (commands cli.Commands) {
 				Value:       "",
 				Usage:       "endpoint uid",
 				Destination: &command_roxy_startpoint_endpoint_uid,
-				Required:    true,
+				Required:    false,
 			},
 		},
 	}, {

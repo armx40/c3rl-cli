@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
+
+	"golang.org/x/exp/slices"
 )
 
 func helper_function_set_bit(number_to_set uint64, bit_no uint8, bit_value uint8) uint64 {
@@ -91,5 +94,68 @@ func helper_function_get_command_output(command string, args []string) (stdout [
 	}
 
 	stdout = out.Bytes()
+	return
+}
+
+func helper_function_get_user_groups() (groups []string, err error) {
+	curr_user, err := user.Current()
+	if err != nil {
+		return
+	}
+
+	groups_, err := curr_user.GroupIds()
+	if err != nil {
+		return
+	}
+
+	for i := range groups_ {
+		group, errd := user.LookupGroupId(groups_[i])
+		if errd != nil {
+			return
+		}
+
+		groups = append(groups, group.Name)
+
+	}
+
+	return
+
+}
+
+func helper_function_is_user_root() (is_root bool, err error) {
+	curr_user, err := user.Current()
+	if err != nil {
+		return
+	}
+
+	if curr_user.Gid == "0" && curr_user.Uid == "0" {
+		is_root = true
+	}
+
+	return
+}
+
+func helper_function_is_user_dialout() (err error) {
+
+	is_root, err := helper_function_is_user_root()
+	if err != nil {
+		return
+	}
+
+	if is_root {
+		/* root has all access */
+		return
+	}
+
+	/* if not root then check if user has access to dialout */
+	groups, err := helper_function_get_user_groups()
+	if err != nil {
+		return
+	}
+
+	if slices.Contains(groups, "dialout") {
+		return
+	}
+	err = fmt.Errorf("user dont have usb permissions")
 	return
 }
