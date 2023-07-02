@@ -7,15 +7,24 @@ import (
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
 
 var command_roxy_startpoint_config_file string
 var command_roxy_startpoint_endpoint_uid string
+
 var command_roxy_credentials_file string
+
 var command_roxy_expose_port uint64
 var command_roxy_expose_type string
 var command_roxy_expose_domain string
+
+var command_roxy_ssh_endpoint_uid string
+var command_roxy_ssh_endpoint_remote_ssh_port uint64
+var command_roxy_ssh_endpoint_local_port uint64
+var command_roxy_ssh_endpoint_user string
+var command_roxy_ssh_endpoint_identity_file string
 
 func command_roxy_subcommands() (commands cli.Commands) {
 
@@ -126,6 +135,55 @@ func command_roxy_subcommands() (commands cli.Commands) {
 		Usage:   "Uninstall endpoint service/job",
 		Action:  command_roxy_uninstall_endpoint,
 	},
+		{
+			Name:    "ssh",
+			Aliases: []string{"sh"},
+			Usage:   "SSH into remote endpoint",
+			Action:  command_roxy_ssh,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:        "uid",
+					Aliases:     []string{"u"},
+					Value:       "",
+					Usage:       "Endpoint uid",
+					Destination: &command_roxy_ssh_endpoint_uid,
+					Required:    false,
+				},
+				&cli.Uint64Flag{
+					Name:        "remote-port",
+					Aliases:     []string{"p"},
+					Value:       0,
+					Usage:       "SSH port on the endpoint",
+					Destination: &command_roxy_ssh_endpoint_remote_ssh_port,
+					Required:    false,
+				},
+				&cli.Uint64Flag{
+					Name:        "local-port",
+					Aliases:     []string{"l"},
+					Value:       0,
+					Usage:       "Local port for the startpoint",
+					Destination: &command_roxy_ssh_endpoint_local_port,
+					Required:    false,
+				},
+				&cli.StringFlag{
+					Name:        "user",
+					Aliases:     []string{"U"},
+					Value:       "",
+					Usage:       "Endpoint SSH user",
+					Destination: &command_roxy_ssh_endpoint_user,
+					Required:    false,
+				},
+
+				&cli.StringFlag{
+					Name:        "identity-file",
+					Aliases:     []string{"i"},
+					Value:       "",
+					Usage:       "Identity for SSH user",
+					Destination: &command_roxy_ssh_endpoint_identity_file,
+					Required:    false,
+				},
+			},
+		},
 	}
 
 	return commands
@@ -170,7 +228,7 @@ func command_roxy_endpoint(cCtx *cli.Context) (err error) {
 		ExposedEnable: false,
 	}
 
-	return pb.StartApp("endpoint", "", "", credentials, &auth_data_roxy, machine_data_bytes, &exposed_data, BuildType == "production")
+	return pb.StartApp("endpoint", "", "", credentials, &auth_data_roxy, machine_data_bytes, &exposed_data, BuildType == "production", false, false, nil)
 }
 
 func command_roxy_startpoint(cCtx *cli.Context) (err error) {
@@ -192,6 +250,7 @@ func command_roxy_startpoint(cCtx *cli.Context) (err error) {
 		return
 	}
 	/**/
+
 	/* get machine data */
 
 	machine_data := Host_device_payloads_information_data_t{}
@@ -207,11 +266,13 @@ func command_roxy_startpoint(cCtx *cli.Context) (err error) {
 	}
 	/**/
 
+	/* exposed data */
 	exposed_data := pb.Exposed_data_t{
 		ExposedEnable: false,
 	}
+	/**/
 
-	return pb.StartApp("startpoint", command_roxy_startpoint_config_file, command_roxy_startpoint_endpoint_uid, credentials, &auth_data_roxy, machine_data_bytes, &exposed_data, BuildType == "production")
+	return pb.StartApp("startpoint", command_roxy_startpoint_config_file, command_roxy_startpoint_endpoint_uid, credentials, &auth_data_roxy, machine_data_bytes, &exposed_data, BuildType == "production", false, false, nil)
 }
 
 func command_roxy_expose(cCtx *cli.Context) (err error) {
@@ -259,7 +320,7 @@ func command_roxy_expose(cCtx *cli.Context) (err error) {
 		ExposedEnable: true,
 	}
 
-	return pb.StartApp("endpoint", "", "", credentials, &auth_data_roxy, machine_data_bytes, &exposed_data, BuildType == "production")
+	return pb.StartApp("endpoint", "", "", credentials, &auth_data_roxy, machine_data_bytes, &exposed_data, BuildType == "production", false, false, nil)
 }
 
 func command_roxy_install_endpoint(cCtx *cli.Context) (err error) {
@@ -315,5 +376,115 @@ func command_roxy_uninstall_endpoint(cCtx *cli.Context) (err error) {
 		return
 	}
 	fmt.Println("endpoint service uninstalled")
+	return
+}
+
+func command_roxy_ssh(cCtx *cli.Context) (err error) {
+
+	var endpoint_uid string
+	var remote_ssh_port uint16
+	var local_startpoint_port uint16
+	var user_message string
+
+	/* ask whatever that has not been given by the user */
+	/* check if endpoint uid is provided */
+	if len(command_roxy_ssh_endpoint_uid) > 0 {
+		endpoint_uid = command_roxy_ssh_endpoint_uid
+		user_message = command_roxy_ssh_endpoint_uid
+	} else {
+
+		/* get connected endpoints */
+		endpoints, errd := command_roxy_functions_get_connected_endpoints()
+		if err != nil {
+			/* check if any uid is provided by the user */
+			if len(command_roxy_ssh_endpoint_uid) == 0 {
+				err = errd
+				return
+			}
+		}
+		/**/
+
+		/* prepare options */
+		endpoints_options := []string{}
+		for i := range endpoints {
+
+			device_name := endpoints[i].DeviceName
+			if len(device_name) == 0 {
+				device_name = "<no_name>"
+			}
+
+			display_string := fmt.Sprintf("%s, [%s]", device_name, endpoints[i].UID)
+
+			endpoints_options = append(endpoints_options, display_string)
+
+		}
+		var qs = []*survey.Question{
+
+			{
+				Name: "Endpoint",
+				Prompt: &survey.Select{
+					Message: "Select Endpoint:",
+					Options: endpoints_options,
+				},
+			},
+		}
+
+		type answer_t struct {
+			Endpoint int
+		}
+
+		var answers answer_t
+
+		err = survey.Ask(qs, &answers)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		/* get endpoint to connect to */
+		// endpoint_to_connect := endpoints[answers.Endpoint]
+		// endpoint_option_to_connect := endpoints_options[answers.Endpoint]
+
+		user_message = endpoints_options[answers.Endpoint]
+		endpoint_uid = endpoints[answers.Endpoint].UID
+		/**/
+	}
+
+	/* ask for username if not given */
+	if len(command_roxy_ssh_endpoint_user) == 0 {
+		var askUsernamePrompt = &survey.Input{
+			Message: "Username:",
+		}
+		err = survey.AskOne(askUsernamePrompt, &command_roxy_ssh_endpoint_user)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		if len(command_roxy_ssh_endpoint_user) == 0 {
+			err = fmt.Errorf("Please provide a username.")
+			return
+		}
+	}
+
+	if command_roxy_ssh_endpoint_local_port > 0 {
+		local_startpoint_port = uint16(command_roxy_ssh_endpoint_local_port)
+	} else {
+		local_startpoint_port = 1794
+	}
+
+	if command_roxy_ssh_endpoint_remote_ssh_port > 0 {
+		remote_ssh_port = uint16(command_roxy_ssh_endpoint_remote_ssh_port)
+	} else {
+		remote_ssh_port = 22
+	}
+
+	print_text := color.New(color.FgWhite)
+	print_text.Printf("Connecting to: ")
+	print_text.Add(color.FgGreen)
+	print_text.Printf("%s on port: %d\n", user_message, remote_ssh_port)
+	/* run ssh routine */
+
+	err = command_roxy_functions_ssh_routine(endpoint_uid, command_roxy_ssh_endpoint_user, command_roxy_ssh_endpoint_identity_file, local_startpoint_port, remote_ssh_port)
+
 	return
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"runtime"
+	"strings"
 
 	"github.com/denisbrodbeck/machineid"
 	"github.com/jaypipes/ghw"
@@ -400,53 +401,53 @@ type host_device_payloads_information_data_uname_t struct {
 
 func (h *host_device_payloads_information_data_uname_t) get() (err error) {
 
-	cmd_out, err := helper_function_get_command_output("uname", []string{"-s"})
+	cmd_out, err := helper_functions_get_command_output("uname", []string{"-s"})
 	if err != nil {
 		return
 	}
-	h.KernelName = string(cmd_out)
+	h.KernelName = strings.TrimSpace(string(cmd_out))
 
-	cmd_out, err = helper_function_get_command_output("uname", []string{"-n"})
+	cmd_out, err = helper_functions_get_command_output("uname", []string{"-n"})
 	if err != nil {
 		return
 	}
-	h.NodeName = string(cmd_out)
+	h.NodeName = strings.TrimSpace(string(cmd_out))
 
-	cmd_out, err = helper_function_get_command_output("uname", []string{"-r"})
+	cmd_out, err = helper_functions_get_command_output("uname", []string{"-r"})
 	if err != nil {
 		return
 	}
-	h.KernelRelease = string(cmd_out)
+	h.KernelRelease = strings.TrimSpace(string(cmd_out))
 
-	cmd_out, err = helper_function_get_command_output("uname", []string{"-v"})
+	cmd_out, err = helper_functions_get_command_output("uname", []string{"-v"})
 	if err != nil {
 		return
 	}
-	h.KernelVersion = string(cmd_out)
+	h.KernelVersion = strings.TrimSpace(string(cmd_out))
 
-	cmd_out, err = helper_function_get_command_output("uname", []string{"-m"})
+	cmd_out, err = helper_functions_get_command_output("uname", []string{"-m"})
 	if err != nil {
 		return
 	}
-	h.Machine = string(cmd_out)
+	h.Machine = strings.TrimSpace(string(cmd_out))
 
-	cmd_out, err = helper_function_get_command_output("uname", []string{"-p"})
+	cmd_out, err = helper_functions_get_command_output("uname", []string{"-p"})
 	if err != nil {
 		return
 	}
-	h.Processor = string(cmd_out)
+	h.Processor = strings.TrimSpace(string(cmd_out))
 
 	// cmd_out, err = helper_function_get_command_output("uname", []string{"-i"})
 	// if err != nil {
 	// 	return
 	// }
-	// h.HardwarePlatform = string(cmd_out)
+	// h.HardwarePlatform = strings.TrimSpace(string(cmd_out))
 
-	cmd_out, err = helper_function_get_command_output("uname", []string{"-o"})
+	cmd_out, err = helper_functions_get_command_output("uname", []string{"-o"})
 	if err != nil {
 		return
 	}
-	h.OperatingSystem = string(cmd_out)
+	h.OperatingSystem = strings.TrimSpace(string(cmd_out))
 
 	return
 }

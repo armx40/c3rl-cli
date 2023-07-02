@@ -7,12 +7,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	// "github.com/google/gousb"
+	"github.com/fatih/color"
+	"github.com/google/gousb"
 	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/block"
+	"golang.org/x/exp/slices"
 )
 
 var csv_file *os.File
@@ -27,75 +32,128 @@ var sqlite3_db_tx *sql.Tx
 var command_devices_functions_device_symmetric_key []byte
 var command_devices_functions_valid_products = []string{"ATNode-R"}
 
-func command_devices_functions_find_c3rl_device(print_out bool) (devices []interface{}, err error) {
+func command_devices_functions_find_c3rl_device(print_out bool) (devices []*gousb.Device, err error) {
 
 	/* check if user has permissions */
 
-	// err = helper_function_is_user_dialout()
-	// if err != nil {
-	// 	print_text := color.New(color.FgRed)
-	// 	print_text.Println("User doesn't have permissions to access USB devices.")
-	// 	err = nil
-	// 	return
-	// }
-	// /**/
+	err = helper_functions_is_user_dialout()
+	if err != nil {
+		print_text := color.New(color.FgRed)
+		print_text.Println("User doesn't have permissions to access USB devices.")
+		err = nil
+		return
+	}
+	/**/
 
-	// ctx := gousb.NewContext()
-	// defer ctx.Close()
+	ctx := gousb.NewContext()
+	defer ctx.Close()
 
-	// // Debugging can be turned on; this shows some of the inner workings of the libusb package.
-	// ctx.Debug(*debug)
+	// Debugging can be turned on; this shows some of the inner workings of the libusb package.
+	ctx.Debug(*debug)
 
-	// devs, err := ctx.OpenDevices(func(desc *gousb.DeviceDesc) bool {
-	// 	if desc.Vendor == 0 && desc.Product == 1 {
-	// 		return true
-	// 	}
-	// 	return false
-	// })
+	devs, err := ctx.OpenDevices(func(desc *gousb.DeviceDesc) bool {
+		if desc.Vendor == 0 && desc.Product == 1 {
+			return true
+		}
+		return false
+	})
 
-	// defer func() {
-	// 	for _, d := range devs {
-	// 		d.Close()
-	// 	}
-	// }()
+	defer func() {
+		for _, d := range devs {
+			d.Close()
+		}
+	}()
 
-	// if err != nil {
-	// 	return
-	// }
+	if err != nil {
+		return
+	}
 
-	// for _, dev := range devs {
-	// 	manu, errd := dev.Manufacturer()
-	// 	if errd != nil {
-	// 		err = errd
-	// 		return
-	// 	}
+	for _, dev := range devs {
+		manu, errd := dev.Manufacturer()
+		if errd != nil {
+			err = errd
+			return
+		}
 
-	// 	prod, errd := dev.Product()
-	// 	if errd != nil {
-	// 		err = errd
-	// 		return
-	// 	}
+		prod, errd := dev.Product()
+		if errd != nil {
+			err = errd
+			return
+		}
 
-	// 	serial, errd := dev.SerialNumber()
-	// 	if errd != nil {
-	// 		err = errd
-	// 		return
-	// 	}
+		serial, errd := dev.SerialNumber()
+		if errd != nil {
+			err = errd
+			return
+		}
 
-	// 	if manu == "c3rl opc pvt ltd" {
-	// 		/* check product */
-	// 		if slices.Contains(command_devices_functions_valid_products, prod) {
-	// 			/* check serial */
-	// 			devices = append(devices, dev)
-	// 			if print_out {
-	// 				fmt.Printf("%s [%s]\n", prod, serial)
-	// 			}
+		if manu == "c3rl opc pvt ltd" {
+			/* check product */
+			if slices.Contains(command_devices_functions_valid_products, prod) {
+				/* check serial */
+				devices = append(devices, dev)
+				if print_out {
+					fmt.Printf("%s [%s]\n", prod, serial)
+				}
 
-	// 		}
+			}
 
-	// 	}
+		}
+		time.Sleep(2 * time.Second)
 
-	// }
+		intf, done, err := dev.DefaultInterface()
+		if err != nil {
+			log.Fatalf("%s.DefaultInterface(): %v", dev, err)
+		}
+		log.Println(intf)
+		defer done()
+		ep, err := intf.OutEndpoint(1)
+		if err != nil {
+			log.Fatalf("%s.OutEndpoint(0x82): %v", intf, err)
+		}
+
+		epin, err := intf.InEndpoint(0x82)
+		if err != nil {
+			log.Fatalf("%s.OutEndpoint(0x82): %v", intf, err)
+		}
+
+		data := make([]byte, 5)
+		for i := range data {
+			data[i] = byte(i + 1)
+		}
+
+		numBytes, err := ep.Write(data)
+		if numBytes != 5 {
+			log.Fatalf("%s.Read([5]): only %d bytes read, returned error is %v", ep, numBytes, err)
+		}
+		log.Println(data)
+
+		time.Sleep(1 * time.Second)
+		log.Println("reading")
+
+		numBytes, err = epin.Read(data)
+		if numBytes != 5 {
+			log.Fatalf("%s.Read([5]): only %d bytes read, returned error is %v", ep, numBytes, err)
+		}
+		log.Println(data)
+
+		// log.Println("writing")
+		// // Write data to the USB device.
+		// numBytes, err := ep.Write(data)
+		// if numBytes != 5 {
+		// 	log.Fatalf("%s.Write([5]): only %d bytes written, returned error is %v", ep, numBytes, err)
+		// }
+
+		// time.Sleep(1 * time.Second)
+		// log.Println("writing")
+
+		// // Write data to the USB device.
+		// numBytes, err = ep.Write(data)
+		// if numBytes != 5 {
+		// 	log.Fatalf("%s.Write([5]): only %d bytes written, returned error is %v", ep, numBytes, err)
+		// }
+
+	}
 
 	return
 }
@@ -207,7 +265,6 @@ func command_devices_functions_get_all_log_files_sorted(folder string, start_ind
 }
 
 func command_devices_functions_request_device_symmetric_key(device_uid string) (key []byte, err error) {
-	var response generalPayloadV2
 
 	if len(command_devices_functions_device_symmetric_key) > 0 {
 		key = command_devices_functions_device_symmetric_key
@@ -244,6 +301,8 @@ func command_devices_functions_request_device_symmetric_key(device_uid string) (
 	if err != nil {
 		return
 	}
+
+	var response generalPayloadV2
 
 	err = json.Unmarshal(resp, &response)
 	if err != nil {

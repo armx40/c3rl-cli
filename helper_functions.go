@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math/rand"
 	"os"
 	"os/exec"
 	"os/user"
@@ -11,7 +12,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func helper_function_set_bit(number_to_set uint64, bit_no uint8, bit_value uint8) uint64 {
+func helper_functions_set_bit(number_to_set uint64, bit_no uint8, bit_value uint8) uint64 {
 	if bit_value == 1 {
 		number_to_set |= 1 << bit_no
 		return number_to_set
@@ -22,36 +23,36 @@ func helper_function_set_bit(number_to_set uint64, bit_no uint8, bit_value uint8
 
 }
 
-func helper_function_set_byte(number_to_set uint64, byte_loc uint8, byte_ uint8) uint64 {
+func helper_functions_set_byte(number_to_set uint64, byte_loc uint8, byte_ uint8) uint64 {
 
 	for i := 0; i < 8; i++ {
 		bit_val := byte_ >> i & 0x01
-		number_to_set = helper_function_set_bit(number_to_set, byte_loc+uint8(i), bit_val)
+		number_to_set = helper_functions_set_bit(number_to_set, byte_loc+uint8(i), bit_val)
 	}
 
 	return number_to_set
 }
 
-func helper_function_set_bits(number_to_set uint64, bit_loc uint8, bits uint64, bits_count uint8) uint64 {
+func helper_functions_set_bits(number_to_set uint64, bit_loc uint8, bits uint64, bits_count uint8) uint64 {
 
 	for i := 0; i < int(bits_count); i++ {
 		bit_val := bits >> i & 0x01
-		number_to_set = helper_function_set_bit(number_to_set, bit_loc+uint8(i), uint8(bit_val))
+		number_to_set = helper_functions_set_bit(number_to_set, bit_loc+uint8(i), uint8(bit_val))
 	}
 
 	return number_to_set
 }
 
-func helper_function_set_bytes(number_to_set uint64, byte_loc uint8, number_to_save uint64, bytes_size uint8) uint64 {
+func helper_functions_set_bytes(number_to_set uint64, byte_loc uint8, number_to_save uint64, bytes_size uint8) uint64 {
 
 	for i := 0; i < int(bytes_size); i++ {
-		number_to_set = helper_function_set_byte(number_to_set, byte_loc+uint8(i*8), uint8((number_to_save>>i)&0xff))
+		number_to_set = helper_functions_set_byte(number_to_set, byte_loc+uint8(i*8), uint8((number_to_save>>i)&0xff))
 	}
 
 	return number_to_set
 }
 
-func helper_function_find_bin(binary string) (string, error) {
+func helper_functions_find_bin(binary string) (string, error) {
 
 	/* thanks to https://github.com/xxr3376/golspci */
 
@@ -73,8 +74,8 @@ func helper_function_find_bin(binary string) (string, error) {
 	return "", errors.New(fmt.Sprintf("Unable to find the '%v' binary", binary))
 }
 
-func helper_function_get_command_output(command string, args []string) (stdout []byte, err error) {
-	bin, err := helper_function_find_bin(command)
+func helper_functions_get_command_output(command string, args []string) (stdout []byte, err error) {
+	bin, err := helper_functions_find_bin(command)
 	if err != nil {
 		return
 	}
@@ -97,7 +98,7 @@ func helper_function_get_command_output(command string, args []string) (stdout [
 	return
 }
 
-func helper_function_get_user_groups() (groups []string, err error) {
+func helper_functions_get_user_groups() (groups []string, err error) {
 	curr_user, err := user.Current()
 	if err != nil {
 		return
@@ -122,7 +123,7 @@ func helper_function_get_user_groups() (groups []string, err error) {
 
 }
 
-func helper_function_is_user_root() (is_root bool, err error) {
+func helper_functions_is_user_root() (is_root bool, err error) {
 	curr_user, err := user.Current()
 	if err != nil {
 		return
@@ -135,9 +136,9 @@ func helper_function_is_user_root() (is_root bool, err error) {
 	return
 }
 
-func helper_function_is_user_dialout() (err error) {
+func helper_functions_is_user_dialout() (err error) {
 
-	is_root, err := helper_function_is_user_root()
+	is_root, err := helper_functions_is_user_root()
 	if err != nil {
 		return
 	}
@@ -148,7 +149,7 @@ func helper_function_is_user_dialout() (err error) {
 	}
 
 	/* if not root then check if user has access to dialout */
-	groups, err := helper_function_get_user_groups()
+	groups, err := helper_functions_get_user_groups()
 	if err != nil {
 		return
 	}
@@ -158,4 +159,15 @@ func helper_function_is_user_dialout() (err error) {
 	}
 	err = fmt.Errorf("user dont have usb permissions")
 	return
+}
+
+func helper_functions_get_random_string(n int) string {
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+
 }

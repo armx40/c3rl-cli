@@ -22,6 +22,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+require github.com/google/gousb v1.1.2
+
 require (
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect

@@ -77,7 +77,7 @@ func (d *DeviceSettingsSurveyAnswerPayload) get_settings() (settings DeviceSetti
 	if d.OperationMode == "WebSocket" {
 		operation_mode_websocket_bit = 0
 	}
-	settings.OperationSettings = uint32(helper_function_set_bit(uint64(settings.OperationSettings), SETTINGS_OPERATION_SETTINGS_MODE_BIT, uint8(operation_mode_websocket_bit)))
+	settings.OperationSettings = uint32(helper_functions_set_bit(uint64(settings.OperationSettings), SETTINGS_OPERATION_SETTINGS_MODE_BIT, uint8(operation_mode_websocket_bit)))
 	/**/
 
 	/* set logging mode */
@@ -85,41 +85,41 @@ func (d *DeviceSettingsSurveyAnswerPayload) get_settings() (settings DeviceSetti
 	if d.LoggingEnable {
 		operation_mode_logging_bit = 1
 	}
-	settings.OperationLoggingSettings = uint32(helper_function_set_bit(uint64(settings.OperationLoggingSettings), SETTINGS_LOGGING_SETTINGS_ENABLED, uint8(operation_mode_logging_bit)))
+	settings.OperationLoggingSettings = uint32(helper_functions_set_bit(uint64(settings.OperationLoggingSettings), SETTINGS_LOGGING_SETTINGS_ENABLED, uint8(operation_mode_logging_bit)))
 
 	/**/
 
 	/* set sleep time */
-	settings.OperationTimingsSettings = uint32(helper_function_set_bits(uint64(settings.OperationTimingsSettings), SETTINGS_OPERATION_SETTINGS_TIMINGS_INTERRUPT_SLEEP_TIME_BIT, uint64(d.InterruptSleepTime), 16))
+	settings.OperationTimingsSettings = uint32(helper_functions_set_bits(uint64(settings.OperationTimingsSettings), SETTINGS_OPERATION_SETTINGS_TIMINGS_INTERRUPT_SLEEP_TIME_BIT, uint64(d.InterruptSleepTime), 16))
 	/**/
 
 	/* set open time */
-	settings.OperationTimingsSettings = uint32(helper_function_set_bits(uint64(settings.OperationTimingsSettings), SETTINGS_OPERATION_SETTINGS_TIMINGS_INTERRUPT_OPEN_TIME_BIT, uint64(d.InterruptOpenTime), 16))
+	settings.OperationTimingsSettings = uint32(helper_functions_set_bits(uint64(settings.OperationTimingsSettings), SETTINGS_OPERATION_SETTINGS_TIMINGS_INTERRUPT_OPEN_TIME_BIT, uint64(d.InterruptOpenTime), 16))
 	/**/
 
 	/* set sensors */
 	for i := range d.Sensors {
 
 		if d.Sensors[i] == "GNSS" {
-			settings.OperationSensorDataSettings = uint32(helper_function_set_bit(uint64(settings.OperationSensorDataSettings), SETTINGS_OPERATION_SETTINGS_SENSOR_DATA_GNSS_ENABLED_BIT, 1))
+			settings.OperationSensorDataSettings = uint32(helper_functions_set_bit(uint64(settings.OperationSensorDataSettings), SETTINGS_OPERATION_SETTINGS_SENSOR_DATA_GNSS_ENABLED_BIT, 1))
 		}
 
 		if d.Sensors[i] == "Temperature" {
-			settings.OperationSensorDataSettings = uint32(helper_function_set_bit(uint64(settings.OperationSensorDataSettings), SETTINGS_OPERATION_SETTINGS_SENSOR_DATA_TEMPERATURE_ENABLED_BIT, 1))
+			settings.OperationSensorDataSettings = uint32(helper_functions_set_bit(uint64(settings.OperationSensorDataSettings), SETTINGS_OPERATION_SETTINGS_SENSOR_DATA_TEMPERATURE_ENABLED_BIT, 1))
 		}
 		if d.Sensors[i] == "Humidity" {
-			settings.OperationSensorDataSettings = uint32(helper_function_set_bit(uint64(settings.OperationSensorDataSettings), SETTINGS_OPERATION_SETTINGS_SENSOR_DATA_HUMIDITY_ENABLED_BIT, 1))
+			settings.OperationSensorDataSettings = uint32(helper_functions_set_bit(uint64(settings.OperationSensorDataSettings), SETTINGS_OPERATION_SETTINGS_SENSOR_DATA_HUMIDITY_ENABLED_BIT, 1))
 		}
 		if d.Sensors[i] == "Temperature/Humidity" {
-			settings.OperationSensorDataSettings = uint32(helper_function_set_bit(uint64(settings.OperationSensorDataSettings), SETTINGS_OPERATION_SETTINGS_SENSOR_DATA_TEMPERATURE_HUMIDITY_ENABLED_BIT, 1))
+			settings.OperationSensorDataSettings = uint32(helper_functions_set_bit(uint64(settings.OperationSensorDataSettings), SETTINGS_OPERATION_SETTINGS_SENSOR_DATA_TEMPERATURE_HUMIDITY_ENABLED_BIT, 1))
 		}
 
 		if d.Sensors[i] == "Flowmeter" {
-			settings.OperationSensorDataSettings = uint32(helper_function_set_bit(uint64(settings.OperationSensorDataSettings), SETTINGS_OPERATION_SETTINGS_SENSOR_DATA_FLOWMETER_ENABLED_BIT, 1))
+			settings.OperationSensorDataSettings = uint32(helper_functions_set_bit(uint64(settings.OperationSensorDataSettings), SETTINGS_OPERATION_SETTINGS_SENSOR_DATA_FLOWMETER_ENABLED_BIT, 1))
 		}
 
 		if d.Sensors[i] == "Motion" {
-			settings.OperationSensorDataSettings = uint32(helper_function_set_bit(uint64(settings.OperationSensorDataSettings), SETTINGS_OPERATION_SETTINGS_SENSOR_DATA_MOTION_ENABLED_BIT, 1))
+			settings.OperationSensorDataSettings = uint32(helper_functions_set_bit(uint64(settings.OperationSensorDataSettings), SETTINGS_OPERATION_SETTINGS_SENSOR_DATA_MOTION_ENABLED_BIT, 1))
 		}
 
 		if d.Sensors[i] == "Ambient Light" {
@@ -311,4 +311,16 @@ type general_payload_v2_t struct {
 	Payload interface{} `json:"payload" validate:"required"`
 	Status  string      `json:"status" validate:"required"`
 	Code    int         `json:"code" validate:"required"`
+}
+
+type endpoint_detailed_response_t struct {
+	UID               string `json:"uid"`
+	ConnectionType    int32  `json:"ct"`
+	DeviceName        string `json:"n"`
+	DeviceDescription string `json:"d"`
+}
+
+type search_response_t struct {
+	TotalCount uint64      `json:"tc" validate:"required"`
+	Data       interface{} `json:"data" validate:"required"`
 }

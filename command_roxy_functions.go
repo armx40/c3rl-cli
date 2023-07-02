@@ -1,11 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"os/user"
 	"runtime"
+
+	roxy "main/c3rl-iot-reverse-roxy"
 )
 
 func command_roxy_functions_endpoint_linux_generate_service_file_data(cli_location string, credential_file string) (service_file_data string, err error) {
@@ -313,6 +317,207 @@ func command_roxy_functions_endpoint_uninstall_routine() (err error) {
 		return
 	}
 	if err != nil {
+		return
+	}
+	return
+}
+
+func command_roxy_functions_get_connected_endpoints() (endpoints []endpoint_detailed_response_t, err error) {
+
+	/* get auth data */
+	auth_data, err := command_auth_functions_get_auth_data()
+	if err != nil {
+		return
+	}
+	/* */
+
+	params := make(map[string]string)
+	params["g"] = "gce"
+
+	headers := make(map[string]string)
+	headers["Authorization"] = auth_data.Token
+
+	resp, err := network_request(API_HOST+"roxy", params, headers, nil)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	var response generalPayloadV2
+
+	err = json.Unmarshal(resp, &response)
+	if err != nil {
+		return
+	}
+
+	if response.Status != "success" {
+		err = fmt.Errorf("failed to connected endpoints")
+		return
+	}
+
+	/* decode data */
+
+	marshaled_bytes, err := json.Marshal(response.Payload)
+	if err != nil {
+		return
+	}
+
+	type response_ struct {
+		TotalCount uint64                         `json:"tc" validate:"required"`
+		Data       []endpoint_detailed_response_t `json:"data" validate:"required"`
+	}
+
+	response_endpoints := response_{}
+
+	err = json.Unmarshal(marshaled_bytes, &response_endpoints)
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal(resp, &response)
+	if err != nil {
+		return
+	}
+
+	endpoints = response_endpoints.Data
+	return
+}
+
+/***************************************/
+
+func command_roxy_functions_ssh_generate_startpoint_config_data(endpoint_uid string, localport uint16, sshport uint16) (startpoint_config_data string, err error) {
+
+	startpoint_config_data = fmt.Sprintf(`
+uid: %s
+hostPorts:
+- startPointHost: 127.0.0.1
+  startPointPort: %d
+  endPointHost: 127.0.0.1
+  endPointPort: %d
+`, endpoint_uid, localport, sshport)
+
+	return
+}
+
+func command_roxy_functions_ssh_write_startpoint_config_file(file_data string) (filename string, err error) {
+
+	filename = fmt.Sprintf("/tmp/roxy-ssh-startpoint-%s.yaml", helper_functions_get_random_string(10))
+
+	err = os.WriteFile(filename, []byte(file_data), 0644)
+
+	return
+}
+
+func command_roxy_functions_ssh_routine(endpoint_uid string, sshuser string, identity_file string, localport uint16, remote_ssh_port uint16) (err error) {
+
+	startpoint_config_data, err := command_roxy_functions_ssh_generate_startpoint_config_data(endpoint_uid, localport, remote_ssh_port)
+
+	if err != nil {
+		return
+	}
+
+	startpoint_config_filename, err := command_roxy_functions_ssh_write_startpoint_config_file(startpoint_config_data)
+	if err != nil {
+		return
+	}
+
+	/* start startpoint */
+
+	/* get auth data */
+	auth_data, err := command_auth_functions_get_auth_data()
+	if err != nil {
+		return
+	}
+	/* */
+
+	auth_data_roxy := roxy.Proxy_auth_data_t{
+		Token: auth_data.Token,
+	}
+
+	/* get credentials */
+	credentials, err := credentials_load_credentials(command_roxy_credentials_file)
+	if err != nil {
+		return
+	}
+	/**/
+	/* get machine data */
+
+	machine_data := Host_device_payloads_information_data_t{}
+
+	err = machine_data.Get()
+	if err != nil {
+		return
+	}
+
+	machine_data_bytes, err := json.Marshal(machine_data)
+	if err != nil {
+		return
+	}
+	/**/
+
+	exposed_data := roxy.Exposed_data_t{
+		ExposedEnable: false,
+	}
+
+	/* callback channel */
+
+	callback_channel := make(roxy.Roxy_callback_channel)
+
+	err = roxy.StartApp("startpoint", startpoint_config_filename, endpoint_uid, credentials, &auth_data_roxy, machine_data_bytes, &exposed_data, BuildType == "production", true, true, &callback_channel)
+
+	/* wait for callback */
+	select {
+	case msg := <-callback_channel:
+		switch msg {
+
+		case roxy.ROXY_CALLBACK_STARTPOINT_STARTED:
+			err = nil
+			break
+
+		case roxy.ROXY_CALLBACK_STARTPOINT_ERROR:
+			err = fmt.Errorf("startpoint failed to start")
+			break
+
+		case roxy.ROXY_CALLBACK_TIMEOUT:
+			err = fmt.Errorf("startpoint timed out")
+			break
+		}
+
+	}
+	if err != nil {
+		return
+	}
+
+	/* deinit callback */
+	roxy.Callback_deinit()
+	/**/
+
+	/* run ssh command */
+
+	bin, err := helper_functions_find_bin("ssh")
+	if err != nil {
+		return
+	}
+
+	/*  */
+
+	/* what for startpoint callback */
+
+	var cmd *exec.Cmd
+
+	if len(identity_file) > 0 {
+		cmd = exec.Command(bin, fmt.Sprintf("%s@127.0.0.1", sshuser), "-p", fmt.Sprint(localport), "-i", identity_file)
+	} else {
+		cmd = exec.Command(bin, fmt.Sprintf("%s@127.0.0.1", sshuser), "-p", fmt.Sprint(localport))
+	}
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err = cmd.Run()
+	if err != nil {
+		log.Println(err)
 		return
 	}
 	return

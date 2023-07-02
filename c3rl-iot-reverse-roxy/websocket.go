@@ -61,6 +61,15 @@ func websocket_init() (err error) {
 				goto ROUTINE_END
 			}
 
+			go func() {
+				if main_app_direction == "startpoint" {
+					callback_send_message(ROXY_CALLBACK_STARTPOINT_STARTED)
+				}
+				if main_app_direction == "endpoint" {
+					callback_send_message(ROXY_CALLBACK_ENDPOINT_STARTED)
+				}
+			}()
+
 			websocket_retries = 5
 
 			err = websocket_receive_routine()
@@ -73,15 +82,17 @@ func websocket_init() (err error) {
 			log.Println(websocket_retries)
 
 			if main_app_direction == "startpoint" {
-				fmt.Printf("cannot establish start point connection\n")
+				// fmt.Printf("cannot establish start point connection\n")
 				err = fmt.Errorf("cannot establish start point connection")
+				callback_send_message(ROXY_CALLBACK_STARTPOINT_ERROR)
 				os.Exit(1)
 				return
 			}
 
 			if main_app_direction == "endpoint" && main_app_endpoint_exposed_data.ExposedEnable {
-				fmt.Printf("cannot establish expose connection\n")
+				// fmt.Printf("cannot establish expose connection\n")
 				err = fmt.Errorf("cannot establish expose connection")
+				callback_send_message(ROXY_CALLBACK_EXPOSE_ERROR)
 				os.Exit(1)
 				return
 			}
@@ -90,6 +101,7 @@ func websocket_init() (err error) {
 			if websocket_retries == 0 {
 				print_text := color.New(color.FgRed)
 				print_text.Println("retries exhausted. Exiting...")
+
 				os.Exit(1)
 			}
 
@@ -298,17 +310,21 @@ func websocket_verify_auth() (err error) {
 		}
 
 		if response.Code == APIv2CODEOK {
-			print_text := color.New(color.FgWhite)
-			print_text.Printf("%s: ", "startpoint")
-			print_text.Add(color.FgGreen)
-			print_text.Printf("%s\n", response.Status)
+			if !main_app_no_fmt_log {
+				print_text := color.New(color.FgWhite)
+				print_text.Printf("%s: ", "startpoint")
+				print_text.Add(color.FgGreen)
+				print_text.Printf("%s\n", response.Status)
+			}
 
 		} else {
-			print_text := color.New(color.FgWhite)
-			print_text.Printf("%s: ", "startpoint")
-			print_text.Add(color.FgRed)
-			print_text.Printf("%s\n", response.Status)
-			print_text.Printf("%s\n", response.Payload)
+			if !main_app_no_fmt_log {
+				print_text := color.New(color.FgWhite)
+				print_text.Printf("%s: ", "startpoint")
+				print_text.Add(color.FgRed)
+				print_text.Printf("%s\n", response.Status)
+				print_text.Printf("%s\n", response.Payload)
+			}
 		}
 	}
 

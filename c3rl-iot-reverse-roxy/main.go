@@ -14,6 +14,18 @@ type Proxy_auth_data_t struct {
 	Token string
 }
 
+type Roxy_callback_channel chan int
+
+const (
+	ROXY_CALLBACK_STARTPOINT_STARTED = 0
+	ROXY_CALLBACK_STARTPOINT_ERROR   = 1
+	ROXY_CALLBACK_ENDPOINT_STARTED   = 2
+	ROXY_CALLBACK_ENDPOINT_ERROR     = 3
+	ROXY_CALLBACK_EXPOSE_STARTED     = 4
+	ROXY_CALLBACK_EXPOSE_ERROR       = 5
+	ROXY_CALLBACK_TIMEOUT            = 6
+)
+
 type Host_device_credentials_t struct {
 	UID      string             `json:"uid"`
 	DeviceID primitive.ObjectID `json:"did"`
@@ -38,11 +50,14 @@ var main_app_credentials *Host_device_credentials_t
 var main_app_machine_data []byte
 var main_app_endpoint_exposed_data *Exposed_data_t
 var main_app_is_production bool
+var main_app_no_fmt_log bool
+var main_app_dont_wait bool
+var main_app_callback_channel *Roxy_callback_channel
 
 // var main_app_startpoint_config_file string
 var main_app_startpoint_config startpoint_config_t
 
-func StartApp(direction string, config_file string, endpoint_uid string, credentials *Host_device_credentials_t, auth_data *Proxy_auth_data_t, machine_data []byte, exposed_data *Exposed_data_t, is_production bool) (err error) {
+func StartApp(direction string, config_file string, endpoint_uid string, credentials *Host_device_credentials_t, auth_data *Proxy_auth_data_t, machine_data []byte, exposed_data *Exposed_data_t, is_production bool, no_fmt_log bool, dont_wait bool, callback_channel *Roxy_callback_channel) (err error) {
 
 	/* check if proxy program is already running */
 
@@ -63,7 +78,13 @@ func StartApp(direction string, config_file string, endpoint_uid string, credent
 	main_app_machine_data = machine_data
 	main_app_endpoint_exposed_data = exposed_data
 	main_app_is_production = is_production
+	main_app_no_fmt_log = no_fmt_log
+	main_app_dont_wait = dont_wait
+	main_app_callback_channel = callback_channel
 
+	if main_app_callback_channel != nil {
+		callback_init()
+	}
 	if main_app_is_production {
 		websocket_endpoint = "wss://roxy.c3rl.com/api/roxy/w"
 	} else {
@@ -117,7 +138,9 @@ func StartApp(direction string, config_file string, endpoint_uid string, credent
 		return err
 	}
 	/* dont not end */
-	select {}
+	if !main_app_dont_wait {
+		select {}
+	}
 	/**/
-
+	return
 }
